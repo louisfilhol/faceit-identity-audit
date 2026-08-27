@@ -1,0 +1,63 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+
+# Local configuration and secrets
+.env*
+!.env.example
+!**/.env.example
+**/config.json
+!**/config.example.json
+
+# Databases, logs, backups, and player/demo data
+*.db
+*.db-*
+*.db.*
+*.sqlite
+*.sqlite3
+*.log
+friends-monitor/faceit.db*
+friends-monitor/events.log
+friends-monitor/backups/
+voice-identity-linker/data/
+voice-identity-linker/*.dem
+voice-identity-linker/*.dem.*
+
+# Downloaded executables, shared libraries, and model caches
+voice-identity-linker/bin/
+**/.cache/
+**/models/
+
+# Virtual environments and Python build/test caches
+.venv/
+**/.venv/
+venv/
+**/venv/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+**/.pytest_cache/
+.ruff_cache/
+**/.ruff_cache/
+*.egg-info/
+**/*.egg-info/
+build/
+dist/
+
+# Coverage and test output
+.coverage
+.coverage.*
+htmlcov/
+junit.xml
+
+# Development tools, editors, and temporary files
+.zcode/
+**/.zcode/
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.tmp
+*.temp
+

@@ -1,0 +1,11 @@
+# Lightweight, pinned test/lint environment: no torch, models, or browser.
+fastapi==0.141.1
+httpx==0.28.1
+numpy==2.2.6
+pytest==8.4.2
+python-dotenv==1.2.2
+python-multipart==0.0.32
+rich==15.0.0
+ruff==0.16.4
+typer==0.27.1
+uvicorn==0.52.1

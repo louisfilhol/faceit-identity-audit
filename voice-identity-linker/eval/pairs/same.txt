@@ -1,0 +1,3 @@
+# Add consented, verified same-speaker WAV pairs here for local evaluation.
+# One pair per line; quote paths that contain spaces.
+# ./private-eval/speaker-a/demo-1.wav ./private-eval/speaker-a/demo-2.wav

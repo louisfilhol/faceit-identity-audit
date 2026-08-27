@@ -1,0 +1,25 @@
+name: Feature request
+description: Suggest a privacy-conscious improvement
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user need would this address?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: privacy
+    attributes:
+      label: Privacy and abuse considerations
+      description: Describe data collection, retention, consent, and misuse risks.
+    validations:
+      required: true

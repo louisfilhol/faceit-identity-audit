@@ -1,0 +1,2 @@
+# Compatibility entrypoint; runtime versions are pinned once at the root.
+-r ../requirements.txt

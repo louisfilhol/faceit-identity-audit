@@ -1,0 +1,17 @@
+# Canonical, pinned runtime dependencies. Linux x86_64 is the supported voice
+# platform; CPU-only PyTorch avoids multi-gigabyte CUDA packages.
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+fastapi==0.141.1
+numpy==2.2.6
+playwright==1.62.0
+python-dotenv==1.2.2
+python-multipart==0.0.32
+rich==15.0.0
+silero-vad==6.2.1
+soundfile==0.14.0
+speechbrain==1.1.0
+torch==2.11.0+cpu; sys_platform == "linux" and platform_machine == "x86_64"
+torchaudio==2.11.0+cpu; sys_platform == "linux" and platform_machine == "x86_64"
+typer==0.27.1
+uvicorn[standard]==0.52.1

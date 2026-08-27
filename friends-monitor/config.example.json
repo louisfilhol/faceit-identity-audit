@@ -1,0 +1,13 @@
+{
+  "discord_webhook": "https://discord.com/api/webhooks/PASTE_YOUR_WEBHOOK_HERE",
+  "discord_ping": "",
+  "scheduler": {
+    "enabled": false,
+    "interval_minutes": 5
+  },
+  "_discord_ping_note": "Discord pings by user ID, not username. Replace discord_ping with your numeric Discord user ID in the form <@123456789>. To get it: enable Developer Mode in Discord settings, right-click your name -> Copy User ID. Empty string = no ping, just a message.",
+  "_accounts_note": "Each account only needs an identifier: the exact FACEIT nickname (case-sensitive), a profile URL (https://www.faceit.com/en/players/...), or a GUID — any of these fields works. The script resolves it to the GUID automatically and writes it back here.",
+  "accounts": [
+    { "faceit": "MyFaceitName", "label": "my_account" }
+  ]
+}

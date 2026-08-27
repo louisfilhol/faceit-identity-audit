@@ -1,0 +1,13 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.4
+    hooks:
+      - id: ruff-check
+      - id: ruff-format
+  - repo: local
+    hooks:
+      - id: public-tree-audit
+        name: Block private/generated release artifacts
+        entry: scripts/check-public-tree.sh
+        language: system
+        pass_filenames: false

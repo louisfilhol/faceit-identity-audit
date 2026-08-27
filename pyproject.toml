@@ -1,0 +1,44 @@
+[project]
+name = "faceit-multi-account-detection"
+version = "0.1.0"
+description = "Privacy-conscious FACEIT relationship and voice-evidence analysis tools"
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+license = "AGPL-3.0-only"
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = [
+  "web/tests",
+  "friends-monitor/tests",
+  "voice-identity-linker/tests",
+]
+addopts = "-ra -m 'not slow'"
+markers = [
+  "slow: requires large model downloads, real demos, or external services",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+extend-exclude = [
+  ".venv",
+  "voice-identity-linker/data",
+  "voice-identity-linker/bin",
+]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "UP", "B"]
+ignore = [
+  "E501", # formatter deliberately leaves some long strings and URLs intact
+  "B008", # Typer declares CLI arguments through function defaults
+  "B904", # API/CLI exception translation intentionally hides internals
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["B017"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"

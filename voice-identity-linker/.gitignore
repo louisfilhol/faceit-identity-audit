@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Project runtime data (never commit biometric data or demos)
+data/
+*.dem
+*.dem.zst
+*.wav
+*.mp4
+*.db
+*.sqlite3
+
+# Prebuilt binaries
+bin/csgove
+bin/*.zip
+
+# Model caches
+.cache/
+models/
+
+# Env
+.env
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# csgove ships its own .so libs next to the binary
+bin/*.so
+bin/*.so.*
+
+# ZCode session artifacts
+.zcode/
