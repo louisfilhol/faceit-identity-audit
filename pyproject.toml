@@ -1,5 +1,5 @@
 [project]
-name = "faceit-multi-account-detection"
+name = "faceit-identity-audit"
 version = "0.1.0"
 description = "Privacy-conscious FACEIT relationship and voice-evidence analysis tools"
 readme = "README.md"

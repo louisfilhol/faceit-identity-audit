@@ -40,8 +40,8 @@ Linux x86_64 and Python 3.11 or 3.12 are required for the complete voice
 workflow. Install `curl`, `unzip`, and `ffmpeg` first.
 
 ```bash
-git clone <repository-url>
-cd faceit-multi-account-detection
+git clone https://github.com/louisfilhol/faceit-identity-audit.git
+cd faceit-identity-audit
 ./setup.sh
 ./run.sh
 ```
