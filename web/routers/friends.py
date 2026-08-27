@@ -322,7 +322,7 @@ async def _wait_for_scheduler_event(timeout: float | None) -> None:
             await event.wait()
         else:
             await asyncio.wait_for(event.wait(), timeout=timeout)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         pass
     finally:
         event.clear()

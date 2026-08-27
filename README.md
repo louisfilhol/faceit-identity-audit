@@ -1,7 +1,7 @@
 # FACEIT Multi-Account Detection
 
 [![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-blue.svg)](LICENSE)
-[![Python 3.10–3.12](https://img.shields.io/badge/python-3.10%E2%80%933.12-3776AB.svg)](pyproject.toml)
+[![Python 3.11–3.12](https://img.shields.io/badge/python-3.11%E2%80%933.12-3776AB.svg)](pyproject.toml)
 
 > **Responsible-use notice:** This project is for education and authorized,
 > lawful investigations. Comply with FACEIT's Terms of Service and applicable
@@ -36,7 +36,7 @@ friends tools remain usable independently.
 
 ## Quickstart
 
-Linux x86_64 and Python 3.10, 3.11, or 3.12 are required for the complete voice
+Linux x86_64 and Python 3.11 or 3.12 are required for the complete voice
 workflow. Install `curl`, `unzip`, and `ffmpeg` first.
 
 ```bash
@@ -50,8 +50,9 @@ Open <http://127.0.0.1:8000>. Setup creates ignored local copies of
 `friends-monitor/config.json` and `voice-identity-linker/.env`; edit them in the
 UI or with a text editor. The friends scheduler starts disabled.
 
-The default setup downloads pinned CPU dependencies, `csgove`, and Playwright
-Chromium. Expect roughly **5–20 minutes**, **2–3 GB of disk**, and another
+The default setup installs the fully resolved `requirements.lock`, then downloads
+`csgove` and Playwright Chromium. Expect roughly **5–20 minutes**, **2–3 GB of
+disk**, and another
 ~85 MB model download on the first voice operation. Demo files and transient WAVs
 need additional space; the app reserves 5 GiB free by default. Use
 `./setup.sh --skip-browser` if demo auto-sync is not needed.
@@ -116,7 +117,8 @@ Detailed commands and privacy controls are in the
 ├── scripts/                 Release-safety checks
 ├── setup.sh                 Pinned unified installer
 ├── run.sh                   Local web launcher
-└── pyproject.toml           Python, pytest, formatter, and lint configuration
+├── pyproject.toml           Python, pytest, formatter, and lint configuration
+└── requirements.lock        Fully resolved Linux x86_64 runtime environment
 ```
 
 All runtime databases, logs, demos, browser profiles, downloaded binaries,

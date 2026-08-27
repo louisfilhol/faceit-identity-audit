@@ -39,7 +39,7 @@ import sys
 import time
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # --------------------------------------------------------------------------- #
@@ -466,7 +466,7 @@ def record_event(
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return datetime.now(UTC).isoformat(timespec="seconds")
 
 
 def _nick(current: dict, prev: dict, fid: str) -> str:

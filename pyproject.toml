@@ -3,7 +3,7 @@ name = "faceit-multi-account-detection"
 version = "0.1.0"
 description = "Privacy-conscious FACEIT relationship and voice-evidence analysis tools"
 readme = "README.md"
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.11,<3.13"
 license = "AGPL-3.0-only"
 
 [tool.pytest.ini_options]
@@ -19,7 +19,7 @@ markers = [
 ]
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py311"
 line-length = 88
 extend-exclude = [
   ".venv",

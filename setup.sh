@@ -32,12 +32,12 @@ done
 echo "==> FACEIT Multi-Account Detection setup"
 
 if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
-  echo "ERROR: $PYTHON_BIN not found. Install Python 3.10, 3.11, or 3.12." >&2
+  echo "ERROR: $PYTHON_BIN not found. Install Python 3.11 or 3.12." >&2
   exit 1
 fi
 
-"$PYTHON_BIN" -c 'import sys; raise SystemExit(not ((3, 10) <= sys.version_info[:2] < (3, 13)))' \
-  || { echo "ERROR: Python 3.10-3.12 is required." >&2; exit 1; }
+"$PYTHON_BIN" -c 'import sys; raise SystemExit(not ((3, 11) <= sys.version_info[:2] < (3, 13)))' \
+  || { echo "ERROR: Python 3.11 or 3.12 is required." >&2; exit 1; }
 
 if [ "$(uname -s)" != "Linux" ] || [ "$(uname -m)" != "x86_64" ]; then
   echo "ERROR: voice extraction currently supports Linux x86_64 only." >&2
@@ -67,7 +67,7 @@ if [ "$INSTALL_DEV" -eq 1 ]; then
   "$VENV_DIR/bin/python" -m pip install -r requirements-dev.txt
 else
   echo "==> Installing pinned runtime dependencies (CPU-only voice stack)"
-  "$VENV_DIR/bin/python" -m pip install -r requirements.txt
+  "$VENV_DIR/bin/python" -m pip install -r requirements.lock
 fi
 "$VENV_DIR/bin/python" -m pip check
 

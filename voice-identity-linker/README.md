@@ -33,7 +33,7 @@ report final performance on held-out speakers.
 ## Requirements and installation
 
 - Linux x86_64.
-- Python 3.10–3.12.
+- Python 3.11–3.12 for the unified install.
 - `curl`, `unzip`, and `ffmpeg`/`ffprobe` on `PATH`.
 - About 2–3 GB free for the CPU environment, Chromium, extractor, and model;
   keep at least 5 GiB free for demo extraction.
