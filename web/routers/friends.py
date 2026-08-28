@@ -25,6 +25,7 @@ DEFAULT_INTERVAL_MINUTES = 5
 MAX_INTERVAL_MINUTES = 24 * 60
 
 import faceit_friends as fm  # noqa: E402
+import friends_overlap as fo  # noqa: E402
 
 _check_lock = threading.Lock()
 _scheduler_lock = threading.Lock()
@@ -450,4 +451,69 @@ def snapshots(account_id: str | None = None):
             }
             for r in rows
         ]
+    }
+
+
+def _account_labels() -> dict[str, str]:
+    try:
+        cfg = _read_config()
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return {
+        account["guid"]: account.get("label")
+        or account.get("faceit")
+        or account["guid"]
+        for account in cfg.get("accounts", [])
+        if account.get("guid")
+    }
+
+
+@router.get("/overlap")
+def overlap():
+    if not fm.DB_PATH.exists():
+        return {"accounts": [], "pairs": []}
+    labels = _account_labels()
+    conn = fm.db_connect()
+    try:
+        accounts = fo.account_overviews(conn)
+        for account in accounts:
+            account["label"] = labels.get(account["guid"]) or account["guid"]
+        pairs = fo.overlap_pairs(conn, accounts)
+        for pair in pairs:
+            pair["label_a"] = labels.get(pair["guid_a"]) or pair["guid_a"]
+            pair["label_b"] = labels.get(pair["guid_b"]) or pair["guid_b"]
+    finally:
+        conn.close()
+    return {"accounts": accounts, "pairs": pairs}
+
+
+@router.get("/overlap/{account_a}/{account_b}")
+def overlap_detail(account_a: str, account_b: str):
+    if account_a == account_b:
+        raise HTTPException(400, "choose two different accounts")
+    if not fm.DB_PATH.exists():
+        raise HTTPException(404, "friends database does not exist yet")
+    labels = _account_labels()
+    conn = fm.db_connect()
+    try:
+        accounts = {account["guid"]: account for account in fo.account_overviews(conn)}
+        missing = [guid for guid in (account_a, account_b) if guid not in accounts]
+        if missing:
+            raise HTTPException(
+                404,
+                "no seeded snapshot for account(s): " + ", ".join(missing),
+            )
+        common = fo.current_common_friends(conn, account_a, account_b)
+        timeline = fo.overlap_timeline(conn, account_a, account_b)
+        for guid in (account_a, account_b):
+            accounts[guid]["label"] = labels.get(guid) or guid
+    finally:
+        conn.close()
+    return {
+        "a": accounts[account_a],
+        "b": accounts[account_b],
+        "common_count": len(common),
+        "common_friends": common,
+        "timeline": timeline,
+        "generated_at": fm._now_iso(),
     }

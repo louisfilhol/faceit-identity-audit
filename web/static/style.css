@@ -451,6 +451,15 @@ td.sub { color: var(--muted); }
   padding: 1px 8px; border-radius: 99px;
 }
 
+/* -------------------------------------------------------------- overlap */
+.overlap-stats { margin-bottom: 14px; }
+.overlap-chart { margin: 2px 0 14px; }
+.overlap-chart svg { display: block; width: 100%; height: auto; }
+.overlap-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; }
+.overlap-area { fill: var(--accent-soft); stroke: none; }
+.overlap-baseline { stroke: var(--border); stroke-width: 1; }
+.overlap-axis { fill: var(--faint); font-size: 11px; font-family: var(--font); }
+
 /* ---------------------------------------------------------------- banner */
 .banner {
   display: flex; align-items: flex-start; gap: 12px;
@@ -560,4 +569,3 @@ td.sub { color: var(--muted); }
 .tag.ok   { background: var(--green-soft); color: var(--green); }
 .tag.skip { background: var(--panel-3); color: var(--muted); }
 .tag.err  { background: var(--red-soft); color: var(--red); }
-

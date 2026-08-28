@@ -50,6 +50,7 @@ const state = {
   config: null,
   events: [],
   snapshots: [],
+  overlap: { accounts: [], pairs: [] },
   players: [],
   view: "overview",
   demos: loadDemos(),
@@ -454,7 +455,7 @@ async function runCheck(target) {
     ).join("") || `<span class="pill subtle">No accounts configured</span>`;
     if (bad.length) toast(`${bad.length} account check(s) failed — see results`, "bad", 6000);
     else toast(`Check done · ${results.length} account(s) scanned`, "good");
-    await Promise.all([loadFriendsStatus(), loadEvents(), loadSnapshots()]);
+    await Promise.all([loadFriendsStatus(), loadEvents(), loadSnapshots(), loadOverlap()]);
     renderOverview();
   } catch (e) {
     note.innerHTML = `<span class="result-note bad">${esc(e.message)}</span>`;
@@ -524,10 +525,145 @@ function renderWatch() {
         </tr>`).join("");
 }
 
+// --------------------------------------------------------------- overlap
+
+async function loadOverlap() {
+  try {
+    state.overlap = await api("/api/friends/overlap");
+  } catch {
+    state.overlap = { accounts: [], pairs: [] };
+  }
+  renderOverlapPairSelect();
+  await loadOverlapDetail();
+}
+
+function renderOverlapPairSelect() {
+  const sel = $("overlap-pair");
+  const pairs = state.overlap.pairs || [];
+  const previous = sel.value;
+  if (!pairs.length) {
+    const seeded = (state.overlap.accounts || []).length;
+    sel.innerHTML =
+      `<option value="">${seeded < 2 ? "Need 2+ seeded accounts" : "No account pairs"}</option>`;
+    sel.disabled = true;
+    return;
+  }
+  sel.disabled = false;
+  const label = accountLabel();
+  sel.innerHTML = pairs.map((p) => {
+    const la = p.label_a || label(p.guid_a);
+    const lb = p.label_b || label(p.guid_b);
+    return `<option value="${esc(p.guid_a)}|${esc(p.guid_b)}">${esc(la)} ↔ ${esc(lb)} · ${p.common} shared</option>`;
+  }).join("");
+  if (previous && [...sel.options].some((o) => o.value === previous)) sel.value = previous;
+}
+
+async function loadOverlapDetail() {
+  const [a, b] = ($("overlap-pair").value || "").split("|");
+  const stats = $("overlap-stats"), chart = $("overlap-chart"), empty = $("overlap-empty");
+  const wrap = $("overlap-table-wrap");
+  if (!a || !b) {
+    stats.hidden = true;
+    chart.hidden = true;
+    wrap.hidden = true;
+    empty.hidden = false;
+    empty.textContent = state.overlap.accounts.length
+      ? "Run a friends check for at least two accounts to compare their friend lists."
+      : "Seed at least two accounts with a friends check to see their shared friends.";
+    return;
+  }
+  empty.hidden = true;
+  const label = accountLabel();
+  try {
+    const payload = await api(
+      `/api/friends/overlap/${encodeURIComponent(a)}/${encodeURIComponent(b)}`
+    );
+    renderOverlapStats(payload, label);
+    renderOverlapChart(payload.timeline);
+    renderOverlapTable(payload, label);
+  } catch (e) {
+    stats.hidden = true;
+    chart.hidden = true;
+    wrap.hidden = true;
+    empty.hidden = false;
+    empty.textContent = e.message;
+  }
+}
+
+function renderOverlapStats(payload, label) {
+  const la = payload.a.label || label(payload.a.guid);
+  const lb = payload.b.label || label(payload.b.guid);
+  const share = (account) => account.friend_count
+    ? Math.round((100 * payload.common_count) / account.friend_count)
+    : 0;
+  const peak = payload.timeline.reduce(
+    (m, p) => (p.overlap > m.overlap ? p : m),
+    { overlap: 0, ts: null },
+  );
+  const stats = $("overlap-stats");
+  stats.hidden = false;
+  stats.innerHTML = `
+    <div class="kpi"><div class="kpi-label">Shared now</div><div class="kpi-value">${payload.common_count}</div><div class="kpi-foot">common friends</div></div>
+    <div class="kpi"><div class="kpi-label">Of ${esc(la)}</div><div class="kpi-value">${share(payload.a)}%</div><div class="kpi-foot">${payload.a.friend_count} friends</div></div>
+    <div class="kpi"><div class="kpi-label">Of ${esc(lb)}</div><div class="kpi-value">${share(payload.b)}%</div><div class="kpi-foot">${payload.b.friend_count} friends</div></div>
+    <div class="kpi accent"><div class="kpi-label">Peak shared</div><div class="kpi-value">${peak.overlap}</div><div class="kpi-foot">${peak.ts ? "on " + esc(fmtTs(peak.ts)) : "—"}</div></div>`;
+}
+
+function renderOverlapChart(timeline) {
+  const box = $("overlap-chart");
+  if (!timeline || timeline.length < 2) {
+    box.hidden = true;
+    return;
+  }
+  box.hidden = false;
+  const width = 640, height = 170;
+  const left = 34, right = 12, top = 12, bottom = 26;
+  const pts = timeline.map((p) => ({ t: new Date(p.ts).getTime(), v: p.overlap }));
+  const tMin = pts[0].t, tMax = pts[pts.length - 1].t;
+  const vMax = Math.max(1, ...pts.map((p) => p.v));
+  const x = (t) => left + ((t - tMin) / Math.max(1, tMax - tMin)) * (width - left - right);
+  const y = (v) => top + (1 - v / vMax) * (height - top - bottom);
+  let line = `M ${x(pts[0].t).toFixed(1)} ${y(pts[0].v).toFixed(1)}`;
+  for (let i = 1; i < pts.length; i++) {
+    line += ` H ${x(pts[i].t).toFixed(1)} V ${y(pts[i].v).toFixed(1)}`;
+  }
+  const area = `${line} V ${height - bottom} H ${x(tMin).toFixed(1)} Z`;
+  const day = (t) => new Date(t).toLocaleDateString(undefined, { day: "2-digit", month: "short" });
+  box.innerHTML = `
+    <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Shared friends over time">
+      <line class="overlap-baseline" x1="${left}" y1="${y(0)}" x2="${width - right}" y2="${y(0)}" />
+      <line class="overlap-baseline" x1="${left}" y1="${y(vMax)}" x2="${width - right}" y2="${y(vMax)}" stroke-dasharray="3 4" />
+      <path class="overlap-area" d="${area}" />
+      <path class="overlap-line" d="${line}" />
+      <text class="overlap-axis" x="${left - 7}" y="${y(vMax) + 4}" text-anchor="end">${vMax}</text>
+      <text class="overlap-axis" x="${left - 7}" y="${y(0) + 4}" text-anchor="end">0</text>
+      <text class="overlap-axis" x="${left}" y="${height - 7}">${esc(day(tMin))}</text>
+      <text class="overlap-axis" text-anchor="end" x="${width - right}" y="${height - 7}">${esc(day(tMax))}</text>
+    </svg>`;
+}
+
+function renderOverlapTable(payload, label) {
+  const la = payload.a.label || label(payload.a.guid);
+  const lb = payload.b.label || label(payload.b.guid);
+  $("overlap-col-a").textContent = `${la} since`;
+  $("overlap-col-b").textContent = `${lb} since`;
+  const rows = payload.common_friends;
+  $("overlap-table").querySelector("tbody").innerHTML = !rows.length
+    ? `<tr><td colspan="3" class="empty">No shared friends between these two accounts right now.</td></tr>`
+    : rows.map((f) =>
+        `<tr>
+          <td>${esc(f.nickname || f.friend_id)}</td>
+          <td class="sub">${esc(fmtTs(f.first_seen_a))}</td>
+          <td class="sub">${esc(fmtTs(f.first_seen_b))}</td>
+        </tr>`).join("");
+  $("overlap-table-wrap").hidden = false;
+}
+
 function loadFriendsData() {
   loadFriendsStatus();
   loadEvents();
   loadSnapshots();
+  loadOverlap();
 }
 
 // ================================================================== VOICE
@@ -979,7 +1115,7 @@ function bind() {
   $$(".nav-item").forEach((b) => b.addEventListener("click", () => navigate(b.dataset.view)));
   $("nav-toggle").addEventListener("click", () => $("sidebar").classList.toggle("open"));
   $("btn-refresh").addEventListener("click", async () => {
-    await Promise.all([refreshHealth(), loadFriendsStatus(), loadEvents(), loadSnapshots(), loadPlayers().catch(() => {})]);
+    await Promise.all([refreshHealth(), loadFriendsStatus(), loadEvents(), loadSnapshots(), loadOverlap(), loadPlayers().catch(() => {})]);
     toast("All data refreshed", "good");
   });
 
@@ -991,6 +1127,8 @@ function bind() {
   $("btn-quick-check").addEventListener("click", () => runCheck("btn-quick-check"));
   $("btn-refresh-events").addEventListener("click", loadEvents);
   $("btn-refresh-watch").addEventListener("click", loadSnapshots);
+  $("btn-refresh-overlap").addEventListener("click", loadOverlap);
+  $("overlap-pair").addEventListener("change", loadOverlapDetail);
   $("events-search").addEventListener("input", renderEvents);
   $("events-filter-kind").addEventListener("change", renderEvents);
   $("watch-search").addEventListener("input", renderWatch);
@@ -1033,4 +1171,3 @@ document.addEventListener("DOMContentLoaded", async () => {
     loadEvents();
   }, 45000);
 });
-
