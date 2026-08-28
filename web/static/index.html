@@ -192,6 +192,35 @@
 
           <div class="card">
             <div class="card-head">
+              <h3>Common friends overlap</h3>
+              <div class="table-tools">
+                <select id="overlap-pair" class="select" aria-label="Account pair"></select>
+                <button class="btn ghost sm" id="btn-refresh-overlap">Refresh</button>
+              </div>
+            </div>
+            <p class="card-hint">
+              See which friends two monitored accounts share and how the overlap changes over time.
+              This is a signal, not proof of multi-accounting.
+            </p>
+            <div class="kpi-grid overlap-stats" id="overlap-stats" hidden></div>
+            <div class="overlap-chart" id="overlap-chart" hidden></div>
+            <div class="empty" id="overlap-empty" hidden></div>
+            <div class="table-wrap" id="overlap-table-wrap" hidden>
+              <table id="overlap-table">
+                <thead>
+                  <tr>
+                    <th>Shared friend</th>
+                    <th id="overlap-col-a">Account A since</th>
+                    <th id="overlap-col-b">Account B since</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
               <h3>Event history</h3>
               <div class="table-tools">
                 <div class="search-box">
@@ -380,4 +409,3 @@
   <script src="/static/app.js"></script>
 </body>
 </html>
-
