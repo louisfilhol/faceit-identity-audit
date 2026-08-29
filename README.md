@@ -14,9 +14,6 @@ Privacy-conscious tools for monitoring public FACEIT friendship changes and,
 optionally, comparing speaker evidence from CS2 demos. A FastAPI dashboard ties
 the two standalone CLIs together.
 
-**Suggested GitHub About text:** Privacy-conscious FACEIT friends-list monitoring
-and optional voice-evidence analysis for authorized multi-account investigations.
-
 ## Features
 
 | Component | What it does | Data and network behavior |
