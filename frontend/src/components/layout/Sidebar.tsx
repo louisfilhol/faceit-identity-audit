@@ -1,7 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import { Gem, LayoutDashboard, Mic, Users } from "lucide-react";
+import { LayoutDashboard, Mic, Users } from "lucide-react";
 import { NavLink } from "react-router";
 import type { HealthSummary } from "@/hooks/useHealth";
+
+/** FACEIT brand mark (simpleicons.org), filled from the parent's color. */
+function FaceitMark({ size = 20 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor">
+      <path d="M23.999 2.705a.167.167 0 00-.312-.1 1141.27 1141.27 0 00-6.053 9.375H.218c-.221 0-.301.282-.11.352 7.227 2.73 17.667 6.836 23.5 9.134.15.06.39-.08.39-.18z" />
+    </svg>
+  );
+}
 
 const NAV_ITEMS = [
   {
@@ -34,7 +43,7 @@ export function Sidebar({
     <aside className={`sidebar${open ? " open" : ""}`} id="sidebar">
       <div className="brand">
         <div className="brand-mark" aria-hidden="true">
-          <Gem size={20} strokeWidth={2.2} />
+          <FaceitMark size={20} />
         </div>
         <div className="brand-text">
           <strong>FACEIT</strong>
