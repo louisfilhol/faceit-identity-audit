@@ -2,6 +2,7 @@
 
 [![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-blue.svg)](LICENSE)
 [![Python 3.11–3.12](https://img.shields.io/badge/python-3.11%E2%80%933.12-3776AB.svg)](pyproject.toml)
+[![React 19 + TypeScript](https://img.shields.io/badge/frontend-React%2019%20%C2%B7%20TypeScript%20%C2%B7%20Vite-61dafb.svg)](frontend)
 
 > **Responsible-use notice:** This project is for education and authorized,
 > lawful investigations. Comply with FACEIT's Terms of Service and applicable
@@ -14,11 +15,13 @@ Privacy-conscious tools for monitoring public FACEIT friendship changes and,
 optionally, comparing speaker evidence from CS2 demos. A FastAPI dashboard ties
 the two standalone CLIs together.
 
+![Dashboard overview](docs/screenshots/dashboard.png)
+
 ## Features
 
 | Component | What it does | Data and network behavior |
 |---|---|---|
-| Web UI | Dashboard, configuration, scheduled checks, history, demo ingestion, and voice comparison | Binds to `127.0.0.1` by default; stores data locally |
+| Web UI (React + TypeScript) | Dashboard, configuration, scheduled checks, history, demo ingestion, and voice comparison | Binds to `127.0.0.1` by default; stores data locally |
 | Friends monitor | Diffs public friends lists and optionally posts Discord alerts | Calls public FACEIT endpoints; stores SQLite snapshots and a local log |
 | Voice identity linker | Extracts per-player audio, creates speaker embeddings, and returns `same`, `different`, or `inconclusive` evidence | Downloads a model on first use; voiceprints and demos stay in ignored local storage |
 | FACEIT demo sync | Uses a logged-in local browser session to retrieve recent demos | Optional Playwright Chromium profile; unofficial endpoints may change |
@@ -31,10 +34,16 @@ workspace for uploads, background progress, player lists, comparisons, and demo
 sync. Status and errors are shown inline; voice dependencies load lazily so the
 friends tools remain usable independently.
 
+The frontend is a React 19 + TypeScript (strict) + Vite application using
+React Router with hash routes (`#/overview`, `#/friends`, `#/voice`) and
+TanStack Query for server state, caching, and background-job polling. In
+production, FastAPI serves the compiled bundle directly from `frontend/dist`;
+no Node process is needed at runtime.
+
 ## Quickstart
 
-Linux x86_64 and Python 3.11 or 3.12 are required for the complete voice
-workflow. Install `curl`, `unzip`, and `ffmpeg` first.
+Linux x86_64, Python 3.11 or 3.12, and Node.js 20+ are required for the
+complete workflow. Install `curl`, `unzip`, and `ffmpeg` first.
 
 ```bash
 git clone https://github.com/louisfilhol/faceit-identity-audit.git
@@ -44,15 +53,68 @@ cd faceit-identity-audit
 ```
 
 Open <http://127.0.0.1:8000>. Setup creates ignored local copies of
-`friends-monitor/config.json` and `voice-identity-linker/.env`; edit them in the
-UI or with a text editor. The friends scheduler starts disabled.
+`friends-monitor/config.json` and `voice-identity-linker/.env`, installs the
+pinned Python environment, and builds the React dashboard (`npm ci` +
+`npm run build` inside `frontend/`). The friends scheduler starts disabled.
 
 The default setup installs the fully resolved `requirements.lock`, then downloads
 `csgove` and Playwright Chromium. Expect roughly **5–20 minutes**, **2–3 GB of
 disk**, and another
 ~85 MB model download on the first voice operation. Demo files and transient WAVs
 need additional space; the app reserves 5 GiB free by default. Use
-`./setup.sh --skip-browser` if demo auto-sync is not needed.
+`./setup.sh --skip-browser` if demo auto-sync is not needed, or
+`./setup.sh --skip-frontend` to skip the dashboard build.
+
+Want a tour without FACEIT credentials, private data, or model downloads? Open
+<http://127.0.0.1:8000/?demo=1#/overview> — demo mode is read-only, clearly
+banner-marked, answered entirely from local synthetic fixtures (requests never
+touch the server), and never activates without the explicit `?demo=1`
+parameter.
+
+## Development
+
+Two processes give you hot-reload on both sides:
+
+```bash
+./setup.sh --dev --skip-frontend   # Python environment + dev tools
+cd frontend && npm ci              # Frontend dependencies (once)
+npm run dev                        # Vite dev server on http://127.0.0.1:5173,
+                                   # proxying /api to FastAPI
+# in another shell, from the repo root:
+./run.sh                           # FastAPI on http://127.0.0.1:8000
+```
+
+Frontend commands (run inside `frontend/`):
+
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Vite dev server with hot reload |
+| `npm run build` | Type-check and produce the production bundle in `dist/` |
+| `npm run lint` / `npm run format:check` | ESLint / Prettier |
+| `npm run typecheck` | Strict TypeScript check |
+| `npm test` | Vitest + React Testing Library unit tests |
+
+### Tests
+
+```bash
+./setup.sh --dev --skip-browser
+.venv/bin/pytest                     # Python (all three suites, slow tests skipped)
+.venv/bin/ruff check .               # Python lint
+.venv/bin/ruff format --check .      # Python formatting
+cd frontend && npm ci && npm test    # Frontend unit tests
+```
+
+`pytest` at the repository root discovers all three Python test suites; the
+web smoke test verifies that the built React app is served (build `frontend/`
+first or let CI provide the artifact). Frontend tests cover routing, the API
+client, health states, friendship-overlap computation, the friends
+configuration flow, ingest polling lifecycle and cleanup, the
+voice-unavailable state, safe rendering of server-provided strings, and
+demo-mode activation plus its offline fixture coverage (demo requests are
+never sent to the network). Tests marked `slow` are excluded by default and
+from CI so no secret, browser login, external service, demo, or model
+download is required. Optional hooks are installed with
+`.venv/bin/pre-commit install`.
 
 ## Configuration
 
@@ -108,53 +170,65 @@ Detailed commands and privacy controls are in the
 
 ```text
 .
-├── web/                     FastAPI app, routers, static UI, and tests
+├── web/                     FastAPI app, routers, and tests
+│   └── (serves frontend/dist at / in production)
+├── frontend/                React 19 + TypeScript + Vite dashboard
+│   └── src/
+│       ├── api/             Typed API client and endpoint modules
+│       ├── components/      Layout shell and shared UI (toasts, pills…)
+│       ├── features/        One directory per view (overview/friends/voice)
+│       ├── hooks/           Health, players, ingest polling, demo list
+│       ├── demo/            Opt-in synthetic demo mode (?demo=1)
+│       └── styles/          FACEIT-dark theme (single CSS file)
 ├── friends-monitor/         Standard-library CLI and tests
 ├── voice-identity-linker/   Voice CLI, pipeline, evaluation tools, and tests
 ├── scripts/                 Release-safety checks
-├── setup.sh                 Pinned unified installer
+├── setup.sh                 Pinned unified installer (Python + frontend)
 ├── run.sh                   Local web launcher
 ├── pyproject.toml           Python, pytest, formatter, and lint configuration
 └── requirements.lock        Fully resolved Linux x86_64 runtime environment
 ```
 
 All runtime databases, logs, demos, browser profiles, downloaded binaries,
-models, caches, and local configuration are ignored by Git.
+models, caches, local configuration, `node_modules`, and the generated
+`frontend/dist` build are ignored by Git.
 
-## Development and tests
+### Why FastAPI and SQLite stay
 
-```bash
-./setup.sh --dev --skip-browser
-.venv/bin/pytest
-.venv/bin/ruff check .
-.venv/bin/ruff format --check .
-```
-
-`pytest` at the repository root discovers all three test suites. Tests marked
-`slow` are excluded by default and from CI so no secret, browser login, external
-service, demo, or model download is required. Optional hooks are installed with
-`.venv/bin/pre-commit install`.
+The backend deliberately remains FastAPI + SQLite. The workload is a
+single-user, localhost investigation tool: one process, one operator, small
+datasets. FastAPI provides typed request bodies, async endpoints for streamed
+demo uploads, and a self-documenting OpenAPI schema; the response types on the
+frontend (`frontend/src/api/types.ts`) are handwritten against the routers and
+kept in sync when an endpoint shape changes. SQLite keeps every voiceprint and
+friendship snapshot in one inspectable local file with zero operational
+surface. A second service or a network database would add attack surface and
+setup cost without any benefit for this deployment model.
 
 ## FAQ and troubleshooting
+
+**The page at `/` says "Frontend build not found".** Build the dashboard:
+`cd frontend && npm ci && npm run build` (or re-run `./setup.sh`), then
+reload. The `/api/*` endpoints work regardless.
 
 **The UI starts but voice operations say the model is unavailable.**  Run once
 with `HF_HUB_OFFLINE=0`, or pre-download with
 `PREDOWNLOAD_MODEL=1 ./setup.sh`. Then offline mode is safe.
 
-**Playwright login does not open or Cloudflare rejects it.**  Re-run
+**Playwright login does not open or Cloudflare rejects it.** Re-run
 `.venv/bin/playwright install chromium`, use headful mode, or attach a logged-in
 Chrome through `FACEIT_CDP_ENDPOINT`. Browser automation and unofficial FACEIT
 endpoints can break without notice.
 
-**`csgove` or audio extraction fails.**  The complete voice workflow supports
+**`csgove` or audio extraction fails.** The complete voice workflow supports
 Linux x86_64. Confirm `voice-identity-linker/bin/csgove` is executable and
 `ffmpeg -version` succeeds, then re-run `./setup.sh`.
 
-**Friends checks return 403/404.**  Nicknames are case-sensitive. A 404 usually
+**Friends checks return 403/404.** Nicknames are case-sensitive. A 404 usually
 means the account identifier is invalid; a 403 can indicate a changed FACEIT or
 Cloudflare policy. See the [friends troubleshooting section](friends-monitor/README.md#troubleshooting).
 
-**Can results prove multi-accounting?**  No. Friendship overlap and speaker
+**Can results prove multi-accounting?** No. Friendship overlap and speaker
 similarity can be wrong or misleading. Require repeated independent evidence,
 respect consent, and never publish an automated accusation.
 
