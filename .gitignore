@@ -31,6 +31,8 @@ voice-identity-linker/bin/
 **/.venv/
 venv/
 **/venv/
+node_modules/
+**/node_modules/
 **/__pycache__/
 *.py[cod]
 .pytest_cache/
@@ -60,4 +62,7 @@ Thumbs.db
 *~
 *.tmp
 *.temp
+
+# Local scratch space (drafts, rendered documents, anything not for release)
+tmp/
 
