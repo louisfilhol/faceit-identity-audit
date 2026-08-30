@@ -34,10 +34,10 @@ function sessionPill(s: FaceitStatus): {
   tone: "subtle" | "red" | "green";
 } {
   if (!s.playwright_installed)
-    return { text: "session: playwright missing", tone: "red" };
-  if (s.cdp_configured) return { text: "session: CDP browser", tone: "green" };
-  if (s.profile_exists) return { text: "session: saved", tone: "green" };
-  return { text: "session: login needed", tone: "subtle" };
+    return { text: "Import unavailable", tone: "red" };
+  if (s.cdp_configured || s.profile_exists)
+    return { text: "FACEIT connected", tone: "green" };
+  return { text: "Sign in required", tone: "subtle" };
 }
 
 function VoiceMatchTags({ match }: { match: SyncMatch }) {
@@ -101,7 +101,7 @@ export function SyncCard() {
     onMutate: () => {
       setStartedAt(null);
       setUserNote({
-        text: "opening a browser window — log in to FACEIT there…",
+        text: "Opening FACEIT sign-in…",
         cls: "result-note busy",
       });
     },
@@ -129,7 +129,7 @@ export function SyncCard() {
     }
     const r = syncData.result ?? {};
     return {
-      text: `done · ${r.downloaded ?? 0} downloaded · ${r.failed ?? 0} failed`,
+      text: `${r.downloaded ?? 0} recordings imported · ${r.failed ?? 0} failed`,
       cls: "result-note good",
     };
   }, [startedAt, syncData]);
@@ -182,17 +182,15 @@ export function SyncCard() {
   return (
     <div className="card">
       <div className="card-head">
-        <h3>Auto-sync FACEIT demos</h3>
+        <h3>Import recent matches</h3>
         {session ? <Pill tone={session.tone}>{session.text}</Pill> : null}
       </div>
       <p className="card-hint">
-        Pulls recent matches for every monitored account, downloads demos that
-        aren't on disk yet and ingests them into the voice DB. Downloads go
-        through a one-time FACEIT login inside an automation-browser window this
-        server opens.
+        Connect FACEIT to bring recent match recordings into the voice library
+        automatically.
       </p>
       <div className="field-row">
-        <label htmlFor="sync-limit">Matches / account</label>
+        <label htmlFor="sync-limit">Matches per account</label>
         <input
           id="sync-limit"
           type="number"
@@ -210,7 +208,7 @@ export function SyncCard() {
             login.isPending || (status ? !status.playwright_installed : false)
           }
         >
-          {login.isPending ? <Spinner /> : null} Log in…
+          {login.isPending ? <Spinner /> : null} Connect FACEIT
         </button>
         <button
           type="button"
@@ -224,30 +222,24 @@ export function SyncCard() {
         >
           {starting || syncRunning ? <Spinner /> : null}
           <Download size={16} strokeWidth={2.2} aria-hidden="true" />
-          Sync recent matches
+          Import matches
         </button>
         {note ? <ResultNote note={note} /> : null}
       </div>
-      <div className="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Account</th>
-              <th>Match</th>
-              <th>Status</th>
-              <th>Voice matches</th>
-            </tr>
-          </thead>
-          <tbody>
-            {!matches.length ? (
+      {matches.length ? (
+        <div className="table-wrap">
+          <table>
+            <thead>
               <tr>
-                <td colSpan={5} className="empty">
-                  Nothing synced yet.
-                </td>
+                <th>Date</th>
+                <th>Account</th>
+                <th>Match</th>
+                <th>Status</th>
+                <th>Voice matches</th>
               </tr>
-            ) : (
-              matches.map((m, i) => {
+            </thead>
+            <tbody>
+              {matches.map((m, i) => {
                 const tag =
                   (m.status && SYNC_TAG[m.status]) ||
                   ({ tone: "skip", label: m.status || "—" } as const);
@@ -270,13 +262,18 @@ export function SyncCard() {
                     </td>
                   </tr>
                 );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+              })}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="empty sync-empty">No recordings imported yet.</div>
+      )}
       {syncData && (syncData.log.length > 0 || syncRunning) ? (
-        <pre className="sync-log">{syncData.log.join("\n")}</pre>
+        <details className="evidence-details sync-details">
+          <summary>Import details</summary>
+          <pre className="sync-log">{syncData.log.join("\n")}</pre>
+        </details>
       ) : null}
     </div>
   );

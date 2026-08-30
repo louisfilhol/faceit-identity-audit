@@ -199,12 +199,12 @@ export function OverviewPage() {
   const summary = loadErrors.length
     ? "Some data is unavailable — retry from the banner."
     : statusQuery.isLoading || snapshotsQuery.isLoading
-      ? "Loading live data…"
-      : `${fmtNum(fs?.accounts ?? 0)} accounts monitored · ${
+      ? "Loading your workspace…"
+      : `${fmtNum(fs?.accounts ?? 0)} accounts watched · ${
           overlaps.length
-        } suspicious friend${overlaps.length === 1 ? "" : "s"} · ${fmtNum(
+        } potential link${overlaps.length === 1 ? "" : "s"} · ${fmtNum(
           fs?.event_count ?? 0,
-        )} events recorded`;
+        )} changes found`;
 
   const openOverlap = (nickname: string) =>
     navigate(`/friends?friend=${encodeURIComponent(nickname)}`);
@@ -237,7 +237,7 @@ export function OverviewPage() {
             disabled={check.isPending}
           >
             {check.isPending ? <Spinner /> : null}
-            {check.isPending ? "Scanning…" : "Run friends check"}
+            {check.isPending ? "Checking…" : "Check accounts"}
           </button>
         </div>
       </div>
@@ -258,7 +258,7 @@ export function OverviewPage() {
 
       <div className="kpi-grid">
         <Kpi
-          label="Suspicious overlaps"
+          label="Potential links"
           value={
             snapshotsQuery.isLoading ? <KpiSkel /> : fmtNum(overlaps.length)
           }
@@ -268,8 +268,8 @@ export function OverviewPage() {
               : !snapshots.length
                 ? "no snapshots yet"
                 : overlaps.length
-                  ? "friends on 2+ accounts"
-                  : "all clear"
+                  ? "connections worth reviewing"
+                  : "nothing needs review"
           }
           tone={
             !snapshotsQuery.isError && snapshots.length
@@ -281,7 +281,7 @@ export function OverviewPage() {
           to="/friends"
         />
         <Kpi
-          label="Friends watched"
+          label="Known connections"
           value={
             snapshotsQuery.isLoading ? <KpiSkel /> : fmtNum(friendIds.size)
           }
@@ -289,13 +289,13 @@ export function OverviewPage() {
             snapshotsQuery.isError
               ? loadFail
               : friendIds.size
-                ? "across all accounts"
-                : "no snapshots yet"
+                ? "across watched accounts"
+                : "run your first check"
           }
           to="/friends"
         />
         <Kpi
-          label="Events recorded"
+          label="Activity"
           value={
             statusQuery.isLoading ? (
               <KpiSkel />
@@ -315,7 +315,7 @@ export function OverviewPage() {
           to="/friends"
         />
         <Kpi
-          label="Monitored accounts"
+          label="Accounts"
           value={
             statusQuery.isLoading ? <KpiSkel /> : fs ? fmtNum(fs.accounts) : "—"
           }
@@ -323,18 +323,18 @@ export function OverviewPage() {
             statusQuery.isError
               ? loadFail
               : fs
-                ? fs.db_exists
-                  ? `from ${fs.used_file}`
-                  : "no config — add accounts"
+                ? fs.accounts
+                  ? "actively watched"
+                  : "add your first account"
                 : "loading…"
           }
           to="/friends"
         />
         {health.badgeState === "unknown" ? (
-          <Kpi label="Voice identity" value={<KpiSkel />} foot="loading…" />
+          <Kpi label="Voice comparison" value={<KpiSkel />} foot="loading…" />
         ) : health.voiceAvailable ? (
           <Kpi
-            label="Voice profiles"
+            label="Voice library"
             value={
               playersQuery.isLoading ? <KpiSkel /> : fmtNum(players.length)
             }
@@ -349,13 +349,13 @@ export function OverviewPage() {
           />
         ) : (
           <Kpi
-            label="Voice identity"
+            label="Voice comparison"
             tone="cta"
             to="/voice"
             value="Not set up"
             foot={
               <>
-                Set up voice matching
+                Set up comparisons
                 <ArrowRight size={12} aria-hidden="true" />
               </>
             }
@@ -368,38 +368,35 @@ export function OverviewPage() {
           <div className="card-head">
             <h3 className="card-title warn">
               <TriangleAlert size={16} strokeWidth={2.2} aria-hidden="true" />
-              Suspicious overlaps
+              Potential links
             </h3>
             <div className="table-tools">
               <span className="pill">{overlaps.length}</span>
               <Link className="link" to="/friends">
-                All overlaps
+                Review all
                 <ArrowRight size={13} aria-hidden="true" />
               </Link>
             </div>
           </div>
           <p className="card-hint">
-            Friends who appear on <strong>2+ monitored accounts</strong> — the
-            classic multi-accounting signal. Click one to inspect it on the
-            watch list.
+            Connections appearing on <strong>more than one account</strong>.
+            Open one to see where the pattern comes from.
           </p>
           <div className="overlap-list">
             {!snapshots.length ? (
               <div className="empty">
-                No snapshots yet — run a friends check to start watching.
+                No activity yet — check your accounts to get started.
               </div>
             ) : !overlaps.length ? (
               <div className="empty">
-                No overlaps detected. Every friend is unique to one account so
-                far.
+                Nothing to review. Connections are unique to one account so far.
               </div>
             ) : (
               <>
                 <OverlapList overlaps={overlaps} onOpen={openOverlap} />
                 {overlaps.length > OVERLAP_PREVIEW ? (
                   <Link className="link overlap-more" to="/friends">
-                    +{overlaps.length - OVERLAP_PREVIEW} more — open Friends
-                    Monitor
+                    +{overlaps.length - OVERLAP_PREVIEW} more — review activity
                     <ArrowRight size={13} aria-hidden="true" />
                   </Link>
                 ) : null}
@@ -410,7 +407,7 @@ export function OverviewPage() {
 
         <div className="card">
           <div className="card-head">
-            <h3>Recent events</h3>
+            <h3>Recent activity</h3>
             <div className="table-tools">
               <div className="seg" role="group" aria-label="Filter by kind">
                 {(["all", "added", "removed"] as const).map((k) => (
@@ -448,7 +445,7 @@ export function OverviewPage() {
                         ? kindFilter !== "all"
                           ? `No ${kindFilter} events ${RANGES[range].long}.`
                           : `No events ${RANGES[range].long}.`
-                        : "No events recorded yet — run a friends check to start tracking."}
+                        : "No activity yet — check your accounts to begin."}
                     </td>
                   </tr>
                 )}
@@ -462,7 +459,7 @@ export function OverviewPage() {
         <div className="quick-result" id="quick-check-result">
           {check.isPending ? (
             <span className="result-note busy">
-              Running checks against FACEIT — this can take a minute…
+              Checking FACEIT accounts — this can take a moment…
             </span>
           ) : check.isError ? (
             <span className="result-note bad">{check.error.message}</span>

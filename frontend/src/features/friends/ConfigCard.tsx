@@ -59,36 +59,28 @@ function AccountRow({
       <input
         data-f="guid"
         type="text"
-        placeholder="Nickname, profile URL or GUID"
+        placeholder="Nickname or profile URL"
         value={draft.guid}
         spellCheck={false}
-        aria-label="Account identifier (nickname, profile URL or GUID)"
+        aria-label="FACEIT nickname or profile URL"
         onChange={(e) => onChange({ ...draft, guid: e.target.value })}
       />
       <input
         data-f="label"
         type="text"
-        placeholder="Label"
+        placeholder="Display name"
         value={draft.label}
         spellCheck={false}
         aria-label="Account label"
         onChange={(e) => onChange({ ...draft, label: e.target.value })}
       />
-      <input
-        data-f="faceit"
-        type="text"
-        placeholder="FACEIT name"
-        value={draft.faceit}
-        spellCheck={false}
-        aria-label="FACEIT name"
-        onChange={(e) => onChange({ ...draft, faceit: e.target.value })}
-      />
+      <input data-f="faceit" type="hidden" value={draft.faceit} readOnly />
       <button
         type="button"
         className="btn ghost sm"
         data-act="resolve"
-        title="Resolve to GUID"
-        aria-label="Resolve to GUID"
+        title="Find account details"
+        aria-label="Find account details"
         onClick={() => void onResolve()}
         disabled={resolving}
       >
@@ -154,11 +146,10 @@ export function ConfigCard({ config }: { config: FriendsConfig | undefined }) {
   return (
     <div className="card">
       <div className="card-head">
-        <h3>Configuration</h3>
-        <span className="pill subtle">config.json</span>
+        <h3>Accounts &amp; notifications</h3>
       </div>
       <div className="field">
-        <label htmlFor="cfg-webhook">Discord webhook</label>
+        <label htmlFor="cfg-webhook">Discord notification link</label>
         <input
           id="cfg-webhook"
           type="url"
@@ -170,15 +161,12 @@ export function ConfigCard({ config }: { config: FriendsConfig | undefined }) {
       </div>
       <div className="field">
         <label htmlFor="cfg-ping">
-          Discord ping{" "}
-          <span className="lbl-note">
-            (<code>&lt;@id&gt;</code>)
-          </span>
+          Who to notify <span className="lbl-note">optional</span>
         </label>
         <input
           id="cfg-ping"
           type="text"
-          placeholder="<@123456789>"
+          placeholder="Discord user or role ID"
           value={ping}
           spellCheck={false}
           onChange={(e) => setPing(e.target.value)}
@@ -186,7 +174,7 @@ export function ConfigCard({ config }: { config: FriendsConfig | undefined }) {
       </div>
       <div className="field">
         <div className="field-row">
-          <label>Monitored accounts</label>
+          <label>Accounts</label>
           <button
             type="button"
             className="btn ghost sm"
@@ -194,7 +182,7 @@ export function ConfigCard({ config }: { config: FriendsConfig | undefined }) {
               setDrafts((d) => [...d, { guid: "", label: "", faceit: "" }])
             }
           >
-            + Add account
+            Add account
           </button>
         </div>
         <div>
@@ -213,8 +201,8 @@ export function ConfigCard({ config }: { config: FriendsConfig | undefined }) {
           ))}
         </div>
         <p className="lbl-note" style={{ marginTop: 6 }}>
-          Paste a nickname (exact case), a profile URL, or a GUID — the swap
-          button resolves it. Saving resolves anything left unresolved.
+          Paste an exact FACEIT nickname or profile link. We’ll find the account
+          details for you when you save.
         </p>
       </div>
       <div className="field-actions">
@@ -224,7 +212,7 @@ export function ConfigCard({ config }: { config: FriendsConfig | undefined }) {
           onClick={onSave}
           disabled={save.isPending}
         >
-          {save.isPending ? <Spinner /> : null} Save config
+          {save.isPending ? <Spinner /> : null} Save changes
         </button>
         {note ? <ResultNote note={note} /> : null}
       </div>

@@ -38,12 +38,12 @@ describe("application routing", () => {
     window.location.hash = "#/overview";
     renderApp();
     await settle();
-    await user.click(screen.getByRole("link", { name: "Friends Monitor" }));
+    await user.click(screen.getByRole("link", { name: "Friend activity" }));
     expect(
-      await screen.findByRole("heading", { level: 2, name: "Friends Monitor" }),
+      await screen.findByRole("heading", { level: 2, name: "Friend activity" }),
     ).toBeTruthy();
     expect(window.location.hash).toBe("#/friends");
-    expect(screen.getByText("Automatic monitoring")).toBeTruthy();
+    expect(screen.getByText("Automatic checks")).toBeTruthy();
   });
 
   it("navigates to the voice identity view", async () => {
@@ -51,9 +51,9 @@ describe("application routing", () => {
     window.location.hash = "#/overview";
     renderApp();
     await settle();
-    await user.click(screen.getByRole("link", { name: "Voice Identity" }));
+    await user.click(screen.getByRole("link", { name: "Voice comparison" }));
     expect(
-      await screen.findByRole("heading", { name: "Voice Identity Linker" }),
+      await screen.findByRole("heading", { name: "Voice comparison" }),
     ).toBeTruthy();
     expect(window.location.hash).toBe("#/voice");
   });
@@ -63,7 +63,7 @@ describe("application routing", () => {
     renderApp();
     await settle();
     expect(
-      await screen.findByRole("heading", { name: "Voice Identity Linker" }),
+      await screen.findByRole("heading", { name: "Voice comparison" }),
     ).toBeTruthy();
   });
 

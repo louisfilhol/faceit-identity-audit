@@ -120,12 +120,12 @@ export function IngestCard({ onIngested }: { onIngested: () => void }) {
     const players = job.result.players ?? [];
     const embedded = players.filter((p) => p.status === "embedded").length;
     note = {
-      text: `Done — demo #${job.result.demo_id} · ${embedded} embedded / ${players.length} processed`,
+      text: `Ready — ${embedded} of ${players.length} players added`,
       cls: "result-note good",
     };
   } else if (ingest.jobId) {
     note = {
-      text: "Queued — extraction and embeddings are running in the background…",
+      text: "Preparing voices from this recording…",
       cls: "result-note busy",
     };
   }
@@ -142,7 +142,7 @@ export function IngestCard({ onIngested }: { onIngested: () => void }) {
       name: job.filename,
       ts: Date.now(),
     });
-    toast(`Demo ingested · ${embedded} players embedded`, "good", 6000);
+    toast(`Recording ready · ${embedded} players added`, "good", 6000);
     if (inputRef.current) inputRef.current.value = "";
     void queryClient.invalidateQueries({ queryKey: queryKeys.voice.players });
     onIngested();
@@ -197,7 +197,7 @@ export function IngestCard({ onIngested }: { onIngested: () => void }) {
   return (
     <div className="card">
       <div className="card-head">
-        <h3>Ingest demo</h3>
+        <h3>Add a match recording</h3>
       </div>
       <div
         className={`drop-zone${dragOver ? " dragover" : ""}`}
@@ -230,15 +230,11 @@ export function IngestCard({ onIngested }: { onIngested: () => void }) {
           {file ? (
             <>
               <strong>{file.name}</strong>
-              <span>
-                {(file.size / 1048576).toFixed(1)} MB — ready to ingest
-              </span>
+              <span>{(file.size / 1048576).toFixed(1)} MB — ready</span>
             </>
           ) : (
             <>
-              <strong>
-                Drop a <code>.dem</code> / <code>.dem.zst</code> here
-              </strong>
+              <strong>Drop a CS2 match recording here</strong>
               <span>or click to browse</span>
             </>
           )}
@@ -259,7 +255,7 @@ export function IngestCard({ onIngested }: { onIngested: () => void }) {
           onClick={() => void onIngest()}
           disabled={busy}
         >
-          Ingest
+          Add to library
         </button>
         {note ? <ResultNote note={note} /> : null}
       </div>

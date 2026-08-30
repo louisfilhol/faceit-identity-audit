@@ -29,19 +29,26 @@ export function Topbar({
       >
         <Menu size={20} aria-hidden="true" />
       </button>
-      <h1 className="page-title">{title}</h1>
+      <div className="page-title" aria-label={`Current page: ${title}`}>
+        <span>Signals</span>
+        <span className="page-title-separator">/</span>
+        <strong>{title}</strong>
+      </div>
       <div className="topbar-actions">
         {lastUpdatedAt ? (
-          <span className="last-updated">{fmtClock(lastUpdatedAt)}</span>
+          <span className="last-updated">
+            Updated {fmtClock(lastUpdatedAt).replace(/^updated\s+/i, "")}
+          </span>
         ) : null}
         <button
           type="button"
-          className="btn ghost icon-only"
+          className="btn ghost topbar-refresh"
           title="Refresh all data"
           aria-label="Refresh all data"
           onClick={onRefresh}
         >
           <RefreshCw size={17} aria-hidden="true" />
+          <span>Refresh</span>
         </button>
       </div>
     </header>

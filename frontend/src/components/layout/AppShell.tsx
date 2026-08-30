@@ -11,8 +11,8 @@ import { isDemoMode } from "@/demo/demoMode";
 
 const PAGE_TITLES: Record<string, string> = {
   overview: "Overview",
-  friends: "Friends Monitor",
-  voice: "Voice Identity",
+  friends: "Friend activity",
+  voice: "Voice comparison",
 };
 
 export function AppShell() {
@@ -69,9 +69,11 @@ export function AppShell() {
         <main className="content" id="main-content">
           {isDemoMode() ? (
             <div className="banner warn" role="status">
-              <strong>Demo mode.</strong> All data on this page is synthetic;
-              nothing is sent to or read from any server. Remove{" "}
-              <code>?demo=1</code> from the URL to return to live data.
+              <strong>Preview data</strong>
+              <span>
+                You’re exploring a safe sample workspace. No real accounts are
+                connected.
+              </span>
             </div>
           ) : null}
           <Outlet />

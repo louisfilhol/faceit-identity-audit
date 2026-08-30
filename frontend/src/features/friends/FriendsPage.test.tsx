@@ -26,7 +26,7 @@ async function openFriends() {
   window.location.hash = "#/friends";
   renderApp();
   expect(
-    await screen.findByRole("heading", { level: 2, name: "Friends Monitor" }),
+    await screen.findByRole("heading", { level: 2, name: "Friend activity" }),
   ).toBeTruthy();
   // Wait until status + config data have arrived (scheduler form + account
   // rows render from query data).
@@ -36,7 +36,7 @@ async function openFriends() {
   await waitFor(
     () =>
       expect(
-        screen.getAllByPlaceholderText("Nickname, profile URL or GUID").length,
+        screen.getAllByPlaceholderText("Nickname or profile URL").length,
       ).toBeGreaterThan(0),
     { timeout: 4000 },
   );
@@ -45,11 +45,9 @@ async function openFriends() {
 describe("friends configuration card", () => {
   it("seeds the editor from GET /api/friends/config", async () => {
     await openFriends();
-    const webhook = screen.getByLabelText("Discord webhook");
+    const webhook = screen.getByLabelText("Discord notification link");
     expect(webhook).toHaveValue("");
-    const rows = screen.getAllByPlaceholderText(
-      "Nickname, profile URL or GUID",
-    );
+    const rows = screen.getAllByPlaceholderText("Nickname or profile URL");
     expect(rows).toHaveLength(2);
     expect(rows[0]).toHaveValue("guid-a");
     expect(screen.getByDisplayValue("Alpha")).toBeTruthy();
@@ -59,12 +57,12 @@ describe("friends configuration card", () => {
   it("saves the edited configuration via PUT and shows feedback", async () => {
     await openFriends();
     const user = userEvent.setup();
-    await user.clear(screen.getByLabelText("Discord webhook"));
+    await user.clear(screen.getByLabelText("Discord notification link"));
     await user.type(
-      screen.getByLabelText("Discord webhook"),
+      screen.getByLabelText("Discord notification link"),
       "https://discord.com/api/webhooks/1/x",
     );
-    await user.click(screen.getByRole("button", { name: /Save config/ }));
+    await user.click(screen.getByRole("button", { name: /Save changes/ }));
 
     expect(await screen.findByText("Saved")).toBeTruthy();
     const put = calls.find(
@@ -99,7 +97,7 @@ describe("friends configuration card", () => {
     calls = mock.calls;
     await openFriends();
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: /Save config/ }));
+    await user.click(screen.getByRole("button", { name: /Save changes/ }));
     await waitFor(() =>
       expect(
         screen.getAllByText(/Could not resolve: account #3/).length,
@@ -110,16 +108,16 @@ describe("friends configuration card", () => {
   it("adds and removes account rows locally before saving", async () => {
     await openFriends();
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: "+ Add account" }));
+    await user.click(screen.getByRole("button", { name: "Add account" }));
     expect(
-      screen.getAllByPlaceholderText("Nickname, profile URL or GUID"),
+      screen.getAllByPlaceholderText("Nickname or profile URL"),
     ).toHaveLength(3);
     const removeButtons = screen.getAllByRole("button", {
       name: "Remove account",
     });
     await user.click(removeButtons[0]!);
     expect(
-      screen.getAllByPlaceholderText("Nickname, profile URL or GUID"),
+      screen.getAllByPlaceholderText("Nickname or profile URL"),
     ).toHaveLength(2);
   });
 
@@ -130,7 +128,7 @@ describe("friends configuration card", () => {
     expect(interval).toBeTruthy();
     await user.clear(interval as HTMLInputElement);
     await user.type(interval as HTMLInputElement, "30");
-    await user.click(screen.getByRole("button", { name: /Save schedule/ }));
+    await user.click(screen.getByRole("button", { name: /Save frequency/ }));
     expect(await screen.findByText("Saved")).toBeTruthy();
     const put = calls.find(
       (c) => c.method === "PUT" && c.url === "/api/friends/scheduler",
@@ -147,7 +145,7 @@ describe("friends configuration card", () => {
     const interval = screen.getByLabelText(/Check every/);
     await user.clear(interval);
     await user.type(interval, "9999");
-    await user.click(screen.getByRole("button", { name: /Save schedule/ }));
+    await user.click(screen.getByRole("button", { name: /Save frequency/ }));
     expect(await screen.findByText("Use 1–1440 minutes")).toBeTruthy();
     expect(
       calls.find((c) => c.url === "/api/friends/scheduler"),
@@ -169,5 +167,98 @@ describe("event history", () => {
     await waitFor(() =>
       expect(screen.getAllByText("mutual_friend").length).toBeGreaterThan(0),
     );
+  });
+});
+
+describe("known connections pagination", () => {
+  it("shows 20 connections at a time and moves between pages", async () => {
+    restore();
+    const snapshots = Array.from({ length: 120 }, (_, index) => ({
+      account_id: "guid-a",
+      friend_id: `friend-${index}`,
+      nickname: `friend_${String(index).padStart(3, "0")}`,
+      first_seen: "2026-08-01T12:00:00Z",
+      last_seen: "2026-08-30T12:00:00Z",
+    }));
+    const mock = installFetchRoutes({
+      ...fixtures.defaultRoutes(true),
+      "/api/friends/snapshots": { body: { snapshots } },
+    });
+    restore = mock.restore;
+    calls = mock.calls;
+
+    await openFriends();
+    expect(await screen.findByText("friend_000")).toBeTruthy();
+    expect(screen.getByText("friend_019")).toBeTruthy();
+    expect(screen.queryByText("friend_020")).toBeNull();
+    expect(screen.getByText("1–20 of 120")).toBeTruthy();
+
+    await userEvent.click(screen.getByRole("button", { name: "Next page" }));
+    expect(await screen.findByText("friend_020")).toBeTruthy();
+    expect(screen.queryByText("friend_000")).toBeNull();
+    expect(screen.getByText("21–40 of 120")).toBeTruthy();
+  });
+});
+
+describe("shared friends pagination", () => {
+  it("shows 20 shared friends at a time and moves between pages", async () => {
+    restore();
+    const commonFriends = Array.from({ length: 58 }, (_, index) => ({
+      friend_id: `shared-${index}`,
+      nickname: `shared_${String(index).padStart(3, "0")}`,
+      first_seen_a: "2026-08-01T12:00:00Z",
+      first_seen_b: "2026-08-02T12:00:00Z",
+    }));
+    const mock = installFetchRoutes({
+      ...fixtures.defaultRoutes(true),
+      "/api/friends/overlap": {
+        body: {
+          accounts: [
+            { guid: "guid-a", label: "Alpha", friend_count: 100 },
+            { guid: "guid-b", label: "Beta", friend_count: 120 },
+          ],
+          pairs: [
+            {
+              guid_a: "guid-a",
+              guid_b: "guid-b",
+              label_a: "Alpha",
+              label_b: "Beta",
+              friend_count_a: 100,
+              friend_count_b: 120,
+              common: 58,
+              jaccard: 0.35,
+            },
+          ],
+        },
+      },
+      "/api/friends/overlap/guid-a/guid-b": {
+        body: {
+          a: { guid: "guid-a", label: "Alpha", friend_count: 100 },
+          b: { guid: "guid-b", label: "Beta", friend_count: 120 },
+          common_count: commonFriends.length,
+          common_friends: commonFriends,
+          timeline: [
+            { ts: "2026-08-01T12:00:00Z", overlap: 50 },
+            { ts: "2026-08-30T12:00:00Z", overlap: 58 },
+          ],
+          generated_at: "2026-08-30T12:00:00Z",
+        },
+      },
+    });
+    restore = mock.restore;
+    calls = mock.calls;
+
+    await openFriends();
+    expect(await screen.findByText("shared_000")).toBeTruthy();
+    expect(screen.getByText("shared_019")).toBeTruthy();
+    expect(screen.queryByText("shared_020")).toBeNull();
+    expect(screen.getByText("1–20 of 58")).toBeTruthy();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Next shared friends page" }),
+    );
+    expect(await screen.findByText("shared_020")).toBeTruthy();
+    expect(screen.queryByText("shared_000")).toBeNull();
+    expect(screen.getByText("21–40 of 58")).toBeTruthy();
   });
 });

@@ -4,7 +4,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import { ToastProvider } from "@/components/common/Toast";
-import "./styles/theme.css";
+import "./styles/product.css";
 
 // Errors from queries are surfaced inline in the views; an unhandled
 // rejection log for every failed poll would be noise, so keep the console

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import { LayoutDashboard, Mic, Users } from "lucide-react";
+import { Activity, AudioLines, LayoutDashboard } from "lucide-react";
 import { NavLink } from "react-router";
 import type { HealthSummary } from "@/hooks/useHealth";
 
@@ -20,13 +20,13 @@ const NAV_ITEMS = [
   },
   {
     to: "/friends",
-    label: "Friends Monitor",
-    icon: <Users size={18} aria-hidden="true" />,
+    label: "Friend activity",
+    icon: <Activity size={18} aria-hidden="true" />,
   },
   {
     to: "/voice",
-    label: "Voice Identity",
-    icon: <Mic size={18} aria-hidden="true" />,
+    label: "Voice comparison",
+    icon: <AudioLines size={18} aria-hidden="true" />,
   },
 ];
 
@@ -46,13 +46,13 @@ export function Sidebar({
           <FaceitMark size={20} />
         </div>
         <div className="brand-text">
-          <strong>FACEIT</strong>
-          <span>Multi-Account Detection</span>
+          <strong>Signals</strong>
+          <span>FACEIT account intelligence</span>
         </div>
       </div>
 
       <nav className="nav" aria-label="Primary" onClick={onNavigate}>
-        <span className="nav-label">Workspace</span>
+        <span className="nav-label">Monitor</span>
         {NAV_ITEMS.map((item) => (
           <NavLink key={item.to} to={item.to} className="nav-item">
             {item.icon}

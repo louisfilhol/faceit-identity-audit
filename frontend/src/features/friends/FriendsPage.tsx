@@ -52,16 +52,15 @@ export function FriendsPage() {
     <section className="view active">
       <div className="view-head">
         <div>
-          <h2>Friends Monitor</h2>
+          <h2>Friend activity</h2>
           <p className="sub">
-            Track friend-list changes across FACEIT accounts and get Discord
-            alerts.
+            Review shared connections and changes across the accounts you watch.
           </p>
         </div>
         <div className="btn-group">
           <button type="button" className="btn" onClick={refreshWatchList}>
             <Eye size={16} aria-hidden="true" />
-            Watch list
+            People
           </button>
           <button
             type="button"
@@ -70,20 +69,22 @@ export function FriendsPage() {
             disabled={check.isPending}
           >
             {check.isPending ? <Spinner /> : null}
-            {check.isPending ? "Scanning…" : "Run check now"}
+            {check.isPending ? "Checking…" : "Check now"}
           </button>
         </div>
       </div>
 
-      <div className="grid-2">
-        <StatusCard
-          status={statusQuery.data}
-          statusError={statusQuery.isError}
-          scheduler={statusQuery.data?.scheduler}
-          check={check}
-        />
+      <StatusCard
+        status={statusQuery.data}
+        statusError={statusQuery.isError}
+        scheduler={statusQuery.data?.scheduler}
+        check={check}
+      />
+
+      <details className="setup-disclosure">
+        <summary>Accounts &amp; notifications</summary>
         <ConfigCard config={configQuery.data} />
-      </div>
+      </details>
 
       <OverlapCard />
       <EventsCard events={events} overlapIds={overlapIds} />

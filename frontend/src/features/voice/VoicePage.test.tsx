@@ -19,7 +19,7 @@ describe("voice module availability", () => {
     window.location.hash = "#/voice";
     renderApp();
     expect(
-      await screen.findByRole("heading", { name: "Voice Identity Linker" }),
+      await screen.findByRole("heading", { name: "Voice comparison" }),
     ).toBeTruthy();
     expect(await screen.findByText("PlayerOne")).toBeTruthy();
     expect(screen.queryByText(/Voice module unavailable/)).toBeNull();
@@ -31,14 +31,16 @@ describe("voice module availability", () => {
     restore = mock.restore;
     window.location.hash = "#/voice";
     renderApp();
-    expect(await screen.findByText(/Voice module unavailable/)).toBeTruthy();
-    expect(screen.getByText(/voice-identity-linker\/setup\.sh/)).toBeTruthy();
+    expect(
+      await screen.findByText(/Voice comparison isn’t ready/),
+    ).toBeTruthy();
+    expect(screen.getByText(/Ask the workspace owner/)).toBeTruthy();
     // The players endpoint must stay untouched in this state.
     expect(
       mock.calls.find((c) => c.url === "/api/voice/players"),
     ).toBeUndefined();
     // Consent messaging stays visible.
-    expect(screen.getByText(/do not prove identity/i)).toBeTruthy();
+    expect(screen.getByText(/never proof of identity/i)).toBeTruthy();
   });
 
   it("renders consent tags per player", async () => {

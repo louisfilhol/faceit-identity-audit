@@ -83,10 +83,10 @@ export function ClusterCard() {
   return (
     <div className="card">
       <div className="card-head">
-        <h3>Demo clusters</h3>
+        <h3>Speakers in a recording</h3>
       </div>
       <p className="card-hint">
-        Speakers grouped by voice similarity inside an ingested demo.
+        Group players whose voices sound alike within one recording.
       </p>
       <div className="field-row">
         <select
@@ -111,7 +111,7 @@ export function ClusterCard() {
           onClick={() => void onCluster()}
           disabled={busy}
         >
-          Cluster
+          Group speakers
         </button>
       </div>
       <div>

@@ -40,10 +40,10 @@ export function MatchCard({
   return (
     <div className="card">
       <div className="card-head">
-        <h3>Match a voice</h3>
+        <h3>Find similar voices</h3>
       </div>
       <div className="field">
-        <label htmlFor="match-id">SteamID to match</label>
+        <label htmlFor="match-id">Account Steam ID</label>
         <input
           id="match-id"
           type="text"
@@ -53,17 +53,20 @@ export function MatchCard({
           onChange={(e) => setSteamid(e.target.value)}
         />
       </div>
-      <div className="field">
-        <label htmlFor="match-k">Top K results</label>
-        <input
-          id="match-k"
-          type="number"
-          value={k}
-          min={1}
-          max={50}
-          onChange={(e) => setK(e.target.value)}
-        />
-      </div>
+      <details className="evidence-details search-options">
+        <summary>Search options</summary>
+        <div className="field">
+          <label htmlFor="match-k">Number of results</label>
+          <input
+            id="match-k"
+            type="number"
+            value={k}
+            min={1}
+            max={50}
+            onChange={(e) => setK(e.target.value)}
+          />
+        </div>
+      </details>
       <div className="field-actions">
         <button
           type="button"
@@ -71,7 +74,7 @@ export function MatchCard({
           onClick={() => void onMatch()}
           disabled={busy}
         >
-          {busy ? <Spinner /> : null} Match
+          {busy ? <Spinner /> : null} Find matches
         </button>
       </div>
     </div>

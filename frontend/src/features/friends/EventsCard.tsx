@@ -37,7 +37,7 @@ export function EventsCard({
   return (
     <div className="card">
       <div className="card-head">
-        <h3>Event history</h3>
+        <h3>Recent activity</h3>
         <div className="table-tools">
           <div className="search-box">
             <Search size={15} aria-hidden="true" />
@@ -55,7 +55,7 @@ export function EventsCard({
             value={kind}
             onChange={(e) => setKind(e.target.value)}
           >
-            <option value="">All kinds</option>
+            <option value="">All changes</option>
             <option value="added">Added</option>
             <option value="removed">Removed</option>
           </select>

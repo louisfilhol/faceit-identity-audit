@@ -20,7 +20,7 @@ describe("overview dashboard", () => {
     renderApp();
     expect(
       await screen.findByText(
-        "3 accounts monitored · 1 suspicious friend · 42 events recorded",
+        "3 accounts watched · 1 potential link · 42 changes found",
       ),
     ).toBeTruthy();
     await waitFor(() => {
@@ -35,7 +35,7 @@ describe("overview dashboard", () => {
     // The fixture has one friend on two accounts.
     await waitFor(() => {
       expect(
-        screen.getByRole("heading", { name: /Suspicious overlaps/ }),
+        screen.getByRole("heading", { name: /Potential links/ }),
       ).toBeTruthy();
     });
     await waitFor(() => {
@@ -112,7 +112,7 @@ describe("overview dashboard", () => {
     window.location.hash = "#/overview";
     renderApp();
     const hero = await screen.findByRole("link", {
-      name: /Suspicious overlaps/i,
+      name: /Potential links/i,
     });
     expect(hero.getAttribute("href")).toBe("#/friends");
     expect(hero.className).toContain("is-link");

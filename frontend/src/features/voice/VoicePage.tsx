@@ -27,10 +27,10 @@ export function VoicePage() {
     <section className="view active">
       <div className="view-head">
         <div>
-          <h2>Voice Identity Linker</h2>
+          <h2>Voice comparison</h2>
           <p className="sub">
-            Compare same-speaker evidence from CS2 demos. Voice scores support
-            an investigation; they do not prove identity.
+            Compare speakers across match recordings. Voice is supporting
+            evidence, never proof of identity on its own.
           </p>
         </div>
       </div>
@@ -39,15 +39,13 @@ export function VoicePage() {
         <div className="banner warn">
           <TriangleAlert size={18} aria-hidden="true" />
           <div>
-            <strong>Voice module unavailable.</strong> Run{" "}
-            <code>voice-identity-linker/setup.sh</code> first, then restart the
-            server.
+            <strong>Voice comparison isn’t ready yet.</strong> Ask the workspace
+            owner to finish voice setup, then refresh this page.
           </div>
         </div>
       ) : null}
 
-      <div className="grid-3">
-        <IngestCard onIngested={() => setMatchResults(null)} />
+      <div className="grid-2 voice-primary">
         <VerifyCard />
         <MatchCard
           onResults={onMatchResults}
@@ -56,28 +54,29 @@ export function VoicePage() {
         />
       </div>
 
-      <SyncCard />
-
-      <div className="grid-2">
-        {matchResults || matchError || matchBusy ? (
-          <div className="card">
-            <div className="card-head">
-              <h3>
-                {matchResults
-                  ? `Match results · threshold ${matchResults.threshold.toFixed(3)}`
-                  : "Match results"}
-              </h3>
-            </div>
-            <MatchResults
-              results={matchResults}
-              error={matchError}
-              busy={matchBusy}
-            />
+      {matchResults || matchError || matchBusy ? (
+        <div className="card match-results-card">
+          <div className="card-head">
+            <h3>Similar voices</h3>
           </div>
-        ) : null}
+          <MatchResults
+            results={matchResults}
+            error={matchError}
+            busy={matchBusy}
+          />
+        </div>
+      ) : null}
 
-        {demos.length ? <ClusterCard /> : null}
-      </div>
+      <details className="setup-disclosure voice-library-disclosure">
+        <summary>Add recordings to the voice library</summary>
+        <div className="voice-library-content">
+          <div className="grid-2">
+            <IngestCard onIngested={() => setMatchResults(null)} />
+            {demos.length ? <ClusterCard /> : null}
+          </div>
+          <SyncCard />
+        </div>
+      </details>
 
       <PlayersCard voiceAvailable={health.voiceAvailable} />
     </section>

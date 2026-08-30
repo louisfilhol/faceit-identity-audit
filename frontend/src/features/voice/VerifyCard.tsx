@@ -10,9 +10,9 @@ const VERDICT_META: Record<
   string,
   { tone: "red" | "green" | "amber"; label: string }
 > = {
-  same: { tone: "red", label: "SAME speaker" },
-  different: { tone: "green", label: "different speakers" },
-  inconclusive: { tone: "amber", label: "INCONCLUSIVE" },
+  same: { tone: "red", label: "Likely same speaker" },
+  different: { tone: "green", label: "Likely different" },
+  inconclusive: { tone: "amber", label: "Not enough evidence" },
 };
 
 export function VerifyCard() {
@@ -64,14 +64,14 @@ export function VerifyCard() {
   return (
     <div className="card">
       <div className="card-head">
-        <h3>Verify two accounts</h3>
+        <h3>Compare two accounts</h3>
       </div>
       <p className="card-hint">
-        A verdict requires repeated evidence from distinct demos. The
-        uncertainty band is operational, not a calibrated identity probability.
+        Choose two accounts to see whether their voice patterns are consistent.
+        More recordings make the result more reliable.
       </p>
       <div className="field">
-        <label htmlFor="verify-a">SteamID A</label>
+        <label htmlFor="verify-a">First account Steam ID</label>
         <input
           id="verify-a"
           type="text"
@@ -82,7 +82,7 @@ export function VerifyCard() {
         />
       </div>
       <div className="field">
-        <label htmlFor="verify-b">SteamID B</label>
+        <label htmlFor="verify-b">Second account Steam ID</label>
         <input
           id="verify-b"
           type="text"
@@ -105,7 +105,7 @@ export function VerifyCard() {
           <span className="result-note busy">comparing…</span>
         ) : evidence && verdict ? (
           <span className="result-note">
-            <Pill tone="blue">score {evidence.score.toFixed(3)}</Pill>{" "}
+            <Pill tone="blue">similarity {evidence.score.toFixed(3)}</Pill>{" "}
             <Pill tone={verdict.tone}>{verdict.label}</Pill>
           </span>
         ) : error ? (
@@ -113,51 +113,58 @@ export function VerifyCard() {
         ) : null}
       </div>
       {evidence ? (
-        <div className="verify-evidence">
-          <div className="verify-metrics">
-            <span>
-              <strong>{evidence.clip_count_a}</strong> windows /{" "}
-              {evidence.demo_count_a} demos (A)
-            </span>
-            <span>
-              <strong>{evidence.clip_count_b}</strong> windows /{" "}
-              {evidence.demo_count_b} demos (B)
-            </span>
-            <span>
-              <strong>{evidence.window_pair_count}</strong> window comparisons
-            </span>
-            <span>
-              <strong>{evidence.pair_count}</strong> equally weighted demo pairs
-            </span>
-            <span>
-              <strong>{(evidence.agreement * 100).toFixed(0)}%</strong> verdict
-              agreement
-            </span>
-            <span>
-              <strong>{(evidence.same_pair_fraction * 100).toFixed(0)}%</strong>{" "}
-              same-speaker support
-            </span>
-            <span>
-              <strong>{evidence.evidence_quality}</strong> evidence
-            </span>
+        <details className="evidence-details">
+          <summary>Evidence details</summary>
+          <div className="verify-evidence">
+            <div className="verify-metrics">
+              <span>
+                <strong>{evidence.clip_count_a}</strong> windows /{" "}
+                {evidence.demo_count_a} demos (A)
+              </span>
+              <span>
+                <strong>{evidence.clip_count_b}</strong> windows /{" "}
+                {evidence.demo_count_b} demos (B)
+              </span>
+              <span>
+                <strong>{evidence.window_pair_count}</strong> window comparisons
+              </span>
+              <span>
+                <strong>{evidence.pair_count}</strong> equally weighted demo
+                pairs
+              </span>
+              <span>
+                <strong>{(evidence.agreement * 100).toFixed(0)}%</strong>{" "}
+                verdict agreement
+              </span>
+              <span>
+                <strong>
+                  {(evidence.same_pair_fraction * 100).toFixed(0)}%
+                </strong>{" "}
+                same-speaker support
+              </span>
+              <span>
+                <strong>{evidence.evidence_quality}</strong> evidence
+              </span>
+            </div>
+            <div className="verify-spread">
+              threshold {evidence.threshold.toFixed(3)} · operational
+              uncertainty band {evidence.band_low.toFixed(3)}–
+              {evidence.band_high.toFixed(3)} · P10–P90{" "}
+              {evidence.score_p10.toFixed(3)}–{evidence.score_p90.toFixed(3)} ·
+              range {evidence.score_min.toFixed(3)}–
+              {evidence.score_max.toFixed(3)} · mean-vector{" "}
+              {evidence.mean_score.toFixed(3)}
+            </div>
+            {pairScores ? (
+              <div className="verify-pairs">demo-pair scores: {pairScores}</div>
+            ) : null}
+            <ul>
+              {(evidence.reasons ?? []).map((reason, i) => (
+                <li key={i}>{reason}</li>
+              ))}
+            </ul>
           </div>
-          <div className="verify-spread">
-            threshold {evidence.threshold.toFixed(3)} · operational uncertainty
-            band {evidence.band_low.toFixed(3)}–{evidence.band_high.toFixed(3)}{" "}
-            · P10–P90 {evidence.score_p10.toFixed(3)}–
-            {evidence.score_p90.toFixed(3)} · range{" "}
-            {evidence.score_min.toFixed(3)}–{evidence.score_max.toFixed(3)} ·
-            mean-vector {evidence.mean_score.toFixed(3)}
-          </div>
-          {pairScores ? (
-            <div className="verify-pairs">demo-pair scores: {pairScores}</div>
-          ) : null}
-          <ul>
-            {(evidence.reasons ?? []).map((reason, i) => (
-              <li key={i}>{reason}</li>
-            ))}
-          </ul>
-        </div>
+        </details>
       ) : null}
     </div>
   );

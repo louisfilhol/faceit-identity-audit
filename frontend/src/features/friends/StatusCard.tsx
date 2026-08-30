@@ -14,28 +14,28 @@ export function schedulerBadge(s: SchedulerSnapshot): {
   label: string;
   tone: "" | "subtle" | "green" | "amber" | "red";
 } {
-  if (!s.configured) return { label: "save config", tone: "subtle" };
+  if (!s.configured) return { label: "Set up", tone: "subtle" };
   if (!s.accounts) return { label: "no accounts", tone: "subtle" };
   if (!s.enabled) return { label: "off", tone: "subtle" };
-  if (s.running) return { label: "checking…", tone: "amber" };
+  if (s.running) return { label: "Checking…", tone: "amber" };
   if (s.last_error) return { label: "error", tone: "red" };
-  return { label: `every ${s.interval_minutes}m`, tone: "green" };
+  return { label: `Every ${s.interval_minutes} min`, tone: "green" };
 }
 
 export function schedulerDetail(s: SchedulerSnapshot): string {
-  if (s.last_error) return `Last scheduler error: ${s.last_error}`;
-  if (s.running) return "A background friends check is running now.";
+  if (s.last_error) return `The last automatic check failed: ${s.last_error}`;
+  if (s.running) return "An automatic check is running now.";
   if (s.last_finished) {
     const when = fmtTs(new Date(s.last_finished * 1000).toISOString());
     const r = s.last_result;
     const summary = r
       ? ` ${r.ok}/${r.accounts} accounts ok · +${r.added}/−${r.removed}.`
       : "";
-    return `Last check ${when}.${summary}`;
+    return `Last checked ${when}.${summary}`;
   }
   return s.enabled
-    ? "The server will check monitored accounts automatically."
-    : "Automatic checks are disabled; manual checks are still available.";
+    ? "Signals will keep these accounts up to date automatically."
+    : "Automatic checks are off. You can still check manually at any time.";
 }
 
 function SchedulerPanel({
@@ -92,7 +92,7 @@ function SchedulerPanel({
   return (
     <div className="scheduler-panel">
       <div className="card-head">
-        <h3>Automatic monitoring</h3>
+        <h3>Automatic checks</h3>
         <Pill tone={badge.tone}>{badge.label}</Pill>
       </div>
       <div className="field-row">
@@ -107,7 +107,7 @@ function SchedulerPanel({
       </div>
       <div className="field">
         <label htmlFor="scheduler-interval">
-          Check every <span className="lbl-note">(minutes)</span>
+          Check every <span className="lbl-note">minutes</span>
         </label>
         <input
           id="scheduler-interval"
@@ -126,7 +126,7 @@ function SchedulerPanel({
           onClick={onSave}
           disabled={save.isPending}
         >
-          {save.isPending ? <Spinner /> : null} Save schedule
+          {save.isPending ? <Spinner /> : null} Save frequency
         </button>
         {note ? <ResultNote note={note} /> : null}
       </div>
@@ -158,7 +158,7 @@ export function StatusCard({
   return (
     <div className="card">
       <div className="card-head">
-        <h3>Status</h3>
+        <h3>Monitoring</h3>
         {statusError ? (
           <Pill tone="red">error</Pill>
         ) : (
@@ -169,32 +169,22 @@ export function StatusCard({
       </div>
       <dl className="kv">
         <div>
-          <dt>Config file</dt>
-          <dd>{status?.used_file ?? "—"}</dd>
-        </div>
-        <div>
-          <dt>Accounts</dt>
+          <dt>Accounts watched</dt>
           <dd>{status ? status.accounts : "—"}</dd>
         </div>
         <div>
-          <dt>Discord webhook</dt>
-          <dd>
-            {status ? (status.has_webhook ? "configured" : "empty") : "—"}
-          </dd>
-        </div>
-        <div>
-          <dt>Events recorded</dt>
+          <dt>Changes found</dt>
           <dd>{status ? fmtNum(status.event_count) : "—"}</dd>
         </div>
         <div>
-          <dt>Accounts with snapshot</dt>
-          <dd>{status ? status.snapshot_accounts : "—"}</dd>
+          <dt>Coverage</dt>
+          <dd>
+            {status ? `${status.snapshot_accounts}/${status.accounts}` : "—"}
+          </dd>
         </div>
         <div>
-          <dt>Database</dt>
-          <dd>
-            {status ? (status.db_exists ? "initialized" : "missing") : "—"}
-          </dd>
+          <dt>Discord alerts</dt>
+          <dd>{status ? (status.has_webhook ? "On" : "Off") : "—"}</dd>
         </div>
       </dl>
       <SchedulerPanel scheduler={scheduler} />

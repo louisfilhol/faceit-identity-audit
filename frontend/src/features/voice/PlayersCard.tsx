@@ -29,7 +29,7 @@ export function PlayersCard({ voiceAvailable }: { voiceAvailable: boolean }) {
   return (
     <div className="card">
       <div className="card-head">
-        <h3>Known players</h3>
+        <h3>Voice library</h3>
         <div className="table-tools">
           <div className="search-box">
             <Search size={15} aria-hidden="true" />
@@ -52,9 +52,9 @@ export function PlayersCard({ voiceAvailable }: { voiceAvailable: boolean }) {
           <thead>
             <tr>
               <th>Nickname</th>
-              <th>SteamID</th>
-              <th>Clips</th>
-              <th>Audio</th>
+              <th>Steam ID</th>
+              <th>Samples</th>
+              <th>Voice time</th>
               <th>Consent</th>
             </tr>
           </thead>
@@ -76,7 +76,7 @@ export function PlayersCard({ voiceAvailable }: { voiceAvailable: boolean }) {
                 <td colSpan={5} className="empty">
                   {players.length
                     ? "No matching players."
-                    : "No players embedded yet — ingest a .dem file."}
+                    : "No voices yet — add a match recording to begin."}
                 </td>
               </tr>
             ) : (

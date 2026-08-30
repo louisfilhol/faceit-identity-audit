@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { AccountLabeler } from "@/features/overview/overlap";
 import { fmtTs } from "@/lib/format";
 import { queryKeys } from "@/api/keys";
 import type { OverlapDetailResponse, TimelinePoint } from "@/api/types";
 import { useAccountLabels, useOverlapDetail, useOverlapList } from "./queries";
+
+const DEFAULT_PAGE_SIZE = 20;
+const PAGE_SIZES = [20, 50, 100] as const;
 
 /** Step-line chart of shared friends over time. */
 function OverlapChart({ timeline }: { timeline: TimelinePoint[] }) {
@@ -159,6 +163,8 @@ export function OverlapCard() {
   const label = useAccountLabels();
   const [pairKey, setPairKey] = useState("");
   const [touched, setTouched] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   const pairs = useMemo(() => listQuery.data?.pairs ?? [], [listQuery.data]);
   const accounts = useMemo(
@@ -178,6 +184,13 @@ export function OverlapCard() {
 
   const [effA, effB] = effectiveKey ? effectiveKey.split("|") : [null, null];
   const detail = useOverlapDetail(effA, effB);
+  const commonFriends = detail.data?.common_friends ?? [];
+  const totalPages = Math.max(1, Math.ceil(commonFriends.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageStart = (currentPage - 1) * pageSize;
+  const visibleFriends = commonFriends.slice(pageStart, pageStart + pageSize);
+  const rangeStart = commonFriends.length ? pageStart + 1 : 0;
+  const rangeEnd = Math.min(pageStart + pageSize, commonFriends.length);
 
   const refresh = () =>
     void queryClient.invalidateQueries({
@@ -187,7 +200,7 @@ export function OverlapCard() {
   return (
     <div className="card">
       <div className="card-head">
-        <h3>Common friends overlap</h3>
+        <h3>Compare accounts</h3>
         <div className="table-tools">
           <select
             className="select"
@@ -197,12 +210,13 @@ export function OverlapCard() {
             onChange={(e) => {
               setTouched(true);
               setPairKey(e.target.value);
+              setPage(1);
             }}
           >
             {!pairs.length ? (
               <option value="">
                 {accounts.length < 2
-                  ? "Need 2+ seeded accounts"
+                  ? "Add at least 2 accounts"
                   : "No account pairs"}
               </option>
             ) : (
@@ -226,15 +240,15 @@ export function OverlapCard() {
         </div>
       </div>
       <p className="card-hint">
-        See which friends two monitored accounts share and how the overlap
-        changes over time. This is a signal, not proof of multi-accounting.
+        See the connections two accounts share and how that pattern changes.
+        Treat it as a lead to review, not proof on its own.
       </p>
 
       {!effA || !effB ? (
         <div className="empty">
           {accounts.length
-            ? "Run a friends check for at least two accounts to compare their friend lists."
-            : "Seed at least two accounts with a friends check to see their shared friends."}
+            ? "Check at least two accounts before comparing their connections."
+            : "Add two accounts, then run a check to compare them."}
         </div>
       ) : detail.isError ? (
         <div className="empty bad">{(detail.error as Error).message}</div>
@@ -258,14 +272,14 @@ export function OverlapCard() {
                 </tr>
               </thead>
               <tbody>
-                {!detail.data.common_friends.length ? (
+                {!visibleFriends.length ? (
                   <tr>
                     <td colSpan={3} className="empty">
                       No shared friends between these two accounts right now.
                     </td>
                   </tr>
                 ) : (
-                  detail.data.common_friends.map((f) => (
+                  visibleFriends.map((f) => (
                     <tr key={f.friend_id}>
                       <td>{f.nickname || f.friend_id}</td>
                       <td className="sub">{fmtTs(f.first_seen_a)}</td>
@@ -276,6 +290,60 @@ export function OverlapCard() {
               </tbody>
             </table>
           </div>
+          {commonFriends.length > 0 ? (
+            <div className="pagination">
+              <span className="pagination-range">
+                {rangeStart}–{rangeEnd} of {commonFriends.length}
+              </span>
+              <div className="pagination-controls">
+                <label className="pagination-size">
+                  <span>Rows</span>
+                  <select
+                    aria-label="Shared friends per page"
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value));
+                      setPage(1);
+                    }}
+                  >
+                    {PAGE_SIZES.map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <nav
+                  className="pagination-nav"
+                  aria-label="Shared friends pages"
+                >
+                  <button
+                    type="button"
+                    className="btn ghost pagination-button"
+                    aria-label="Previous shared friends page"
+                    disabled={currentPage === 1}
+                    onClick={() => setPage((value) => Math.max(1, value - 1))}
+                  >
+                    <ChevronLeft size={15} aria-hidden="true" />
+                  </button>
+                  <span className="pagination-page" aria-live="polite">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn ghost pagination-button"
+                    aria-label="Next shared friends page"
+                    disabled={currentPage === totalPages}
+                    onClick={() =>
+                      setPage((value) => Math.min(totalPages, value + 1))
+                    }
+                  >
+                    <ChevronRight size={15} aria-hidden="true" />
+                  </button>
+                </nav>
+              </div>
+            </div>
+          ) : null}
         </>
       )}
     </div>

@@ -160,11 +160,13 @@ describe("ingest card", () => {
     await userEvent.upload(input, file);
     expect(screen.getByText("match.dem")).toBeTruthy();
 
-    await userEvent.click(screen.getByRole("button", { name: "Ingest" }));
+    await userEvent.click(
+      screen.getByRole("button", { name: "Add to library" }),
+    );
     // 202 accepted → queued message + progress panel with player rows.
     expect(
       await screen.findByText(
-        /extraction and embeddings are running/,
+        /Preparing voices from this recording/,
         undefined,
         {
           timeout: 4000,
