@@ -1,23 +1,40 @@
-# FACEIT Multi-Account Detection
+# FACEIT Identity Audit
 
+[![CI](https://github.com/louisfilhol/faceit-identity-audit/actions/workflows/ci.yml/badge.svg)](https://github.com/louisfilhol/faceit-identity-audit/actions/workflows/ci.yml)
 [![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-blue.svg)](LICENSE)
 [![Python 3.11–3.12](https://img.shields.io/badge/python-3.11%E2%80%933.12-3776AB.svg)](pyproject.toml)
 [![React 19 + TypeScript](https://img.shields.io/badge/frontend-React%2019%20%C2%B7%20TypeScript%20%C2%B7%20Vite-61dafb.svg)](frontend)
+
+A local full-stack investigation dashboard that combines changes in public
+FACEIT friendship networks with optional speaker-similarity evidence from CS2
+demos. It is built with React and TypeScript on the frontend and FastAPI and
+Python on the backend. Results are deliberately presented as signals to review,
+never as proof of identity.
+
+![Dashboard overview](docs/screenshots/dashboard.png)
+
+The dashboard uses **Signals** as its short product label.
+
+## What it demonstrates
+
+- **Full-stack product development:** a typed React interface, FastAPI endpoints,
+  SQLite persistence, background ingestion jobs, local configuration, and a
+  production build served by one process.
+- **Applied ML integration:** CS2 voice extraction, optional VAD, SpeechBrain
+  speaker embeddings, similarity search, and conservative `same`, `different`,
+  or `inconclusive` results.
+- **Engineering for reliability and privacy:** automated tests and CI, bounded
+  uploads, local-first storage, consent-aware matching, synthetic demo data, and
+  checks that prevent credentials or private artifacts from entering Git.
 
 > **Responsible-use notice:** This project is for education and authorized,
 > lawful investigations. Comply with FACEIT's Terms of Service and applicable
 > privacy/biometric laws, obtain consent or another valid legal basis, minimize
 > retained data, and never use results to harass, dox, or publicly accuse a
-> player. Voice similarity and friendship overlap are supporting signals—not
+> player. Voice similarity and friendship overlap are supporting signals, not
 > proof of identity. The software is provided without warranty.
 
-Privacy-conscious tools for monitoring public FACEIT friendship changes and,
-optionally, comparing speaker evidence from CS2 demos. A FastAPI dashboard ties
-the two standalone CLIs together.
-
-![Dashboard overview](docs/screenshots/dashboard.png)
-
-## Features
+## Architecture
 
 | Component | What it does | Data and network behavior |
 |---|---|---|
@@ -25,14 +42,6 @@ the two standalone CLIs together.
 | Friends monitor | Diffs public friends lists and optionally posts Discord alerts | Calls public FACEIT endpoints; stores SQLite snapshots and a local log |
 | Voice identity linker | Extracts per-player audio, creates speaker embeddings, and returns `same`, `different`, or `inconclusive` evidence | Downloads a model on first use; voiceprints and demos stay in ignored local storage |
 | FACEIT demo sync | Uses a logged-in local browser session to retrieve recent demos | Optional Playwright Chromium profile; unofficial endpoints may change |
-
-### UI at a glance
-
-The single-page UI has an overview with KPI cards and recent events, a Friends
-Monitor workspace for accounts/webhooks/scheduling, and a Voice Identity Linker
-workspace for uploads, background progress, player lists, comparisons, and demo
-sync. Status and errors are shown inline; voice dependencies load lazily so the
-friends tools remain usable independently.
 
 The frontend is a React 19 + TypeScript (strict) + Vite application using
 React Router with hash routes (`#/overview`, `#/friends`, `#/voice`) and
@@ -116,6 +125,34 @@ from CI so no secret, browser login, external service, demo, or model
 download is required. Optional hooks are installed with
 `.venv/bin/pre-commit install`.
 
+## Evaluation and limitations
+
+The speaker-similarity feature is experimental and is not calibrated for
+production identity decisions. The default threshold of `0.5` is a local
+starting point, not a universal operating threshold. Project-specific false
+match, false non-match, and equal error rates are not currently published;
+metrics reported for the upstream model would not automatically transfer to
+compressed, noisy in-game voice chat.
+
+The verification logic therefore requires repeated evidence from multiple
+demos, compatible preprocessing, sufficient agreement between demo pairs, and
+a score outside an uncertainty band before returning a definitive result. In
+all other cases it returns `inconclusive`. The tools in
+[`voice-identity-linker/eval`](voice-identity-linker/eval) can generate
+same-speaker and different-speaker pairs, compare VAD policies, and tune a
+threshold on a separate, consented dataset.
+
+Other important limitations:
+
+- Friendship overlap shows correlation, not identity, and can have ordinary
+  social explanations.
+- FACEIT demo sync relies on unofficial endpoints and may break when the site
+  changes.
+- Jobs are held in memory and SQLite is used deliberately because this is a
+  single-user, localhost tool; it is not a distributed or multi-tenant service.
+- Any real-world use needs a documented legal basis, data-retention policy,
+  representative evaluation data, and human review.
+
 ## Configuration
 
 Friends-monitor settings live in ignored `friends-monitor/config.json`; start
@@ -179,7 +216,7 @@ Detailed commands and privacy controls are in the
 │       ├── features/        One directory per view (overview/friends/voice)
 │       ├── hooks/           Health, players, ingest polling, demo list
 │       ├── demo/            Opt-in synthetic demo mode (?demo=1)
-│       └── styles/          FACEIT-dark theme (single CSS file)
+│       └── styles/          Light product theme and responsive layout
 ├── friends-monitor/         Standard-library CLI and tests
 ├── voice-identity-linker/   Voice CLI, pipeline, evaluation tools, and tests
 ├── scripts/                 Release-safety checks
