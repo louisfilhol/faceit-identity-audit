@@ -15,16 +15,18 @@ afterEach(() => {
 });
 
 describe("overview dashboard", () => {
-  it("renders KPI values from the API", async () => {
+  it("renders KPI values and the header summary from the API", async () => {
     window.location.hash = "#/overview";
     renderApp();
     expect(
-      await screen.findByText("Live snapshot of both detection tools."),
+      await screen.findByText(
+        "3 accounts monitored · 1 suspicious friend · 42 events recorded",
+      ),
     ).toBeTruthy();
     await waitFor(() => {
       expect(screen.getByText("42")).toBeTruthy(); // events recorded
     });
-    expect(screen.getByText("3")).toBeTruthy(); // friends accounts
+    expect(screen.getByText("3")).toBeTruthy(); // monitored accounts
   });
 
   it("computes the friendship overlap from snapshots", async () => {
@@ -38,7 +40,9 @@ describe("overview dashboard", () => {
     });
     await waitFor(() => {
       // The count badge's accessible content is its visible text.
-      expect(screen.getByText("1", { selector: ".pill" })).toBeTruthy();
+      expect(
+        screen.getByText("1", { selector: ".pill:not(.subtle)" }),
+      ).toBeTruthy();
     });
     expect(screen.getAllByText("mutual_friend").length).toBeGreaterThanOrEqual(
       1,
@@ -68,7 +72,7 @@ describe("overview dashboard", () => {
     const events = {
       events: [
         {
-          ts: "2026-08-28T03:45:00Z",
+          ts: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
           account_lbl: "<script>alert(1)</script>",
           kind: "added",
           friend_id: "f1",
@@ -135,12 +139,78 @@ describe("overview dashboard", () => {
       screen.getByRole("button", { name: "Removed", pressed: false }),
     );
     expect(
-      await screen.findByText("No removed events in recent history."),
+      await screen.findByText("No removed events in the last 7d."),
     ).toBeTruthy();
     await userEvent.click(
       screen.getByRole("button", { name: "Added", pressed: false }),
     );
     expect(await screen.findByText("added")).toBeTruthy();
+  });
+
+  it("scopes the events card and KPI delta with the range selector", async () => {
+    restore();
+    const hoursAgo = (h: number) =>
+      new Date(Date.now() - h * 3_600_000).toISOString();
+    ({ restore } = installFetchRoutes({
+      ...fixtures.defaultRoutes(true),
+      "/api/friends/events": {
+        body: {
+          events: [
+            {
+              ts: hoursAgo(2),
+              account_lbl: "Alpha",
+              kind: "added",
+              friend_id: "r1",
+              nickname: "recent_friend",
+            },
+            {
+              ts: hoursAgo(72),
+              account_lbl: "Alpha",
+              kind: "removed",
+              friend_id: "r2",
+              nickname: "week_friend",
+            },
+            {
+              ts: hoursAgo(480),
+              account_lbl: "Beta",
+              kind: "added",
+              friend_id: "r3",
+              nickname: "old_friend",
+            },
+          ],
+        },
+      },
+    }));
+    window.location.hash = "#/overview";
+    renderApp();
+    // Default window is 7d: the 2h-old add and the 3d-old remove are in
+    // range, the 20d-old add is not.
+    await screen.findByText("+1 adds · −1 removes · last 7d");
+    expect(screen.getByText("2", { selector: ".pill.subtle" })).toBeTruthy();
+    expect(screen.getByText("week_friend")).toBeTruthy();
+    expect(screen.queryByText("old_friend")).toBeNull();
+
+    await userEvent.click(screen.getByRole("button", { name: "24h" }));
+    await screen.findByText("+1 adds · last 24h");
+    expect(screen.getByText("1", { selector: ".pill.subtle" })).toBeTruthy();
+    expect(screen.queryByText("week_friend")).toBeNull();
+
+    await userEvent.click(screen.getByRole("button", { name: "30d" }));
+    expect(await screen.findByText("old_friend")).toBeTruthy();
+    expect(screen.getByText("3", { selector: ".pill.subtle" })).toBeTruthy();
+  });
+
+  it("offers a voice setup CTA tile when voice is off", async () => {
+    restore();
+    ({ restore } = installFetchRoutes({
+      ...fixtures.defaultRoutes(true),
+      "/api/health": { body: fixtures.health(false) },
+    }));
+    window.location.hash = "#/overview";
+    renderApp();
+    const cta = await screen.findByRole("link", { name: /Not set up/ });
+    expect(cta.getAttribute("href")).toBe("#/voice");
+    expect(cta.className).toContain("cta");
   });
 
   it("opens the watch list filtered when an overlap row is clicked", async () => {

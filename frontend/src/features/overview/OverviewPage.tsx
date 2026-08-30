@@ -2,6 +2,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router";
 import { ArrowRight, ArrowUpRight, TriangleAlert } from "lucide-react";
+import { Pill } from "@/components/common/Pill";
 import { Spinner } from "@/components/common/Spinner";
 import { useHealth } from "@/hooks/useHealth";
 import { usePlayers } from "@/hooks/usePlayers";
@@ -23,9 +24,35 @@ import { EVENTS_TABLE_HEAD, EventRows } from "@/features/friends/EventsTable";
 import type { FriendsEvent } from "@/api/types";
 
 type KindFilter = "all" | "added" | "removed";
+type Range = "24h" | "7d" | "30d";
 
-const WEEK_MS = 7 * 24 * 3600 * 1000;
+const RANGES: Record<Range, { ms: number; label: string; long: string }> = {
+  "24h": { ms: 24 * 3600_000, label: "last 24h", long: "in the last 24h" },
+  "7d": { ms: 7 * 24 * 3600_000, label: "last 7d", long: "in the last 7d" },
+  "30d": { ms: 30 * 24 * 3600_000, label: "last 30d", long: "in the last 30d" },
+};
+const RANGE_ORDER: Range[] = ["24h", "7d", "30d"];
+
 const OVERLAP_PREVIEW = 8;
+
+/** Events whose timestamp falls inside the selected window. Module-level so
+ * the render body stays free of impure clock reads. */
+function eventsInRange(events: FriendsEvent[], range: Range): FriendsEvent[] {
+  const minTs = Date.now() - RANGES[range].ms;
+  return events.filter((e) => new Date(e.ts).getTime() >= minTs);
+}
+
+/** Adds / removes caption for the events KPI, scoped to the window. */
+function rangeDeltaFoot(inRange: FriendsEvent[], range: Range): string {
+  const adds = inRange.filter((e) => e.kind === "added").length;
+  const removes = inRange.filter((e) => e.kind === "removed").length;
+  const parts: string[] = [];
+  if (adds) parts.push(`+${fmtNum(adds)} adds`);
+  if (removes) parts.push(`−${fmtNum(removes)} removes`);
+  return parts.length
+    ? `${parts.join(" · ")} · ${RANGES[range].label}`
+    : `no changes ${RANGES[range].label}`;
+}
 
 function KpiSkel() {
   return <span className="skeleton kpi-skel" aria-hidden="true" />;
@@ -41,7 +68,7 @@ function Kpi({
   label: string;
   value: ReactNode;
   foot: ReactNode;
-  tone?: "warn" | "good";
+  tone?: "warn" | "good" | "cta";
   /** When set the whole tile links to that route. */
   to?: string;
 }) {
@@ -109,24 +136,6 @@ function OverlapList({
   );
 }
 
-/** Adds / removes within the trailing seven-day window, for the events KPI
- * delta. Module-level so the render body stays free of impure clock reads. */
-function weekDelta(events: FriendsEvent[]): string {
-  const weekAgo = Date.now() - WEEK_MS;
-  const adds = events.filter(
-    (e) => e.kind === "added" && new Date(e.ts).getTime() >= weekAgo,
-  ).length;
-  const removes = events.filter(
-    (e) => e.kind === "removed" && new Date(e.ts).getTime() >= weekAgo,
-  ).length;
-  const parts: string[] = [];
-  if (adds) parts.push(`+${fmtNum(adds)} adds`);
-  if (removes) parts.push(`−${fmtNum(removes)} removes`);
-  return parts.length
-    ? `${parts.join(" · ")} this week`
-    : "no changes this week";
-}
-
 export function OverviewPage() {
   const health = useHealth();
   const statusQuery = useFriendsStatus();
@@ -138,6 +147,7 @@ export function OverviewPage() {
   useFriendsCheckToasts(check);
   const navigate = useNavigate();
   const [kindFilter, setKindFilter] = useState<KindFilter>("all");
+  const [range, setRange] = useState<Range>("7d");
 
   const fs = statusQuery.data;
   const events = useMemo(
@@ -161,14 +171,14 @@ export function OverviewPage() {
   const friendIds = new Set(snapshots.map((s) => s.friend_id));
   const clipCount = players.reduce((sum, p) => sum + (p.clip_count || 0), 0);
   const audioSec = players.reduce((sum, p) => sum + (p.audio_sec || 0), 0);
-  const weekFoot = weekDelta(events);
 
+  const inRange = useMemo(() => eventsInRange(events, range), [events, range]);
   const shownEvents = useMemo(
     () =>
       kindFilter === "all"
-        ? events
-        : events.filter((e) => e.kind === kindFilter),
-    [events, kindFilter],
+        ? inRange
+        : inRange.filter((e) => e.kind === kindFilter),
+    [inRange, kindFilter],
   );
 
   // Surface query failures instead of showing an eternal "loading…" dashboard.
@@ -185,6 +195,17 @@ export function OverviewPage() {
   };
   const loadFail = <span className="result-note bad">failed to load</span>;
 
+  // One consistent page name + a summary that earns the header's place.
+  const summary = loadErrors.length
+    ? "Some data is unavailable — retry from the banner."
+    : statusQuery.isLoading || snapshotsQuery.isLoading
+      ? "Loading live data…"
+      : `${fmtNum(fs?.accounts ?? 0)} accounts monitored · ${
+          overlaps.length
+        } suspicious friend${overlaps.length === 1 ? "" : "s"} · ${fmtNum(
+          fs?.event_count ?? 0,
+        )} events recorded`;
+
   const openOverlap = (nickname: string) =>
     navigate(`/friends?friend=${encodeURIComponent(nickname)}`);
 
@@ -192,18 +213,33 @@ export function OverviewPage() {
     <section className="view active">
       <div className="view-head">
         <div>
-          <h2>Dashboard</h2>
-          <p className="sub">Live snapshot of both detection tools.</p>
+          <h2>Overview</h2>
+          <p className="sub">{summary}</p>
         </div>
-        <button
-          type="button"
-          className="btn primary"
-          onClick={() => check.mutate()}
-          disabled={check.isPending}
-        >
-          {check.isPending ? <Spinner /> : null}
-          {check.isPending ? "Scanning…" : "Run friends check"}
-        </button>
+        <div className="table-tools">
+          <div className="seg" role="group" aria-label="Time range">
+            {RANGE_ORDER.map((r) => (
+              <button
+                key={r}
+                type="button"
+                aria-pressed={range === r}
+                className={range === r ? "active" : undefined}
+                onClick={() => setRange(r)}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="btn primary"
+            onClick={() => check.mutate()}
+            disabled={check.isPending}
+          >
+            {check.isPending ? <Spinner /> : null}
+            {check.isPending ? "Scanning…" : "Run friends check"}
+          </button>
+        </div>
       </div>
 
       {loadErrors.length ? (
@@ -274,7 +310,7 @@ export function OverviewPage() {
               ? loadFail
               : eventsQuery.isLoading
                 ? "loading…"
-                : weekFoot
+                : rangeDeltaFoot(inRange, range)
           }
           to="/friends"
         />
@@ -294,28 +330,37 @@ export function OverviewPage() {
           }
           to="/friends"
         />
-        <Kpi
-          label="Voice profiles"
-          value={
-            !health.voiceAvailable ? (
-              "—"
-            ) : playersQuery.isLoading ? (
-              <KpiSkel />
-            ) : (
-              fmtNum(players.length)
-            )
-          }
-          foot={
-            !health.voiceAvailable
-              ? "voice off — set up in Voice Identity"
-              : playersQuery.isError
+        {health.badgeState === "unknown" ? (
+          <Kpi label="Voice identity" value={<KpiSkel />} foot="loading…" />
+        ) : health.voiceAvailable ? (
+          <Kpi
+            label="Voice profiles"
+            value={
+              playersQuery.isLoading ? <KpiSkel /> : fmtNum(players.length)
+            }
+            foot={
+              playersQuery.isError
                 ? loadFail
                 : playersQuery.isLoading
                   ? "loading…"
                   : `${fmtNum(clipCount)} clips · ${fmtDur(audioSec)} speech`
-          }
-          to="/voice"
-        />
+            }
+            to="/voice"
+          />
+        ) : (
+          <Kpi
+            label="Voice identity"
+            tone="cta"
+            to="/voice"
+            value="Not set up"
+            foot={
+              <>
+                Set up voice matching
+                <ArrowRight size={12} aria-hidden="true" />
+              </>
+            }
+          />
+        )}
       </div>
 
       <div className="grid-2">
@@ -380,6 +425,7 @@ export function OverviewPage() {
                   </button>
                 ))}
               </div>
+              <Pill tone="subtle">{fmtNum(shownEvents.length)}</Pill>
               <Link className="link" to="/friends">
                 View all
                 <ArrowRight size={13} aria-hidden="true" />
@@ -399,7 +445,9 @@ export function OverviewPage() {
                   <tr>
                     <td colSpan={4} className="empty">
                       {events.length
-                        ? `No ${kindFilter} events in recent history.`
+                        ? kindFilter !== "all"
+                          ? `No ${kindFilter} events ${RANGES[range].long}.`
+                          : `No events ${RANGES[range].long}.`
                         : "No events recorded yet — run a friends check to start tracking."}
                     </td>
                   </tr>

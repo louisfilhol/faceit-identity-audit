@@ -623,6 +623,23 @@ a.kpi {
 .kpi.good .kpi-foot {
   color: var(--green);
 }
+/* CTA tile: an action to take rather than a number (e.g. voice not set up) */
+.kpi.cta {
+  border-style: dashed;
+  border-color: rgba(255, 85, 0, 0.4);
+}
+.kpi.cta .kpi-value {
+  font-size: 20px;
+  letter-spacing: 0;
+  color: var(--accent-2);
+}
+.kpi.cta .kpi-foot {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--accent-2);
+  font-weight: 600;
+}
 .kpi-skel {
   display: inline-block;
   width: 52px;

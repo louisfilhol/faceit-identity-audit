@@ -26,7 +26,7 @@ describe("application routing", () => {
     renderApp();
     await settle();
     expect(
-      await screen.findByRole("heading", { name: "Dashboard" }),
+      await screen.findByRole("heading", { level: 2, name: "Overview" }),
     ).toBeTruthy();
     const active = screen.getByRole("link", { name: "Overview" });
     expect(active).toHaveAttribute("aria-current", "page");
@@ -72,7 +72,7 @@ describe("application routing", () => {
     renderApp();
     await settle();
     expect(
-      await screen.findByRole("heading", { name: "Dashboard" }),
+      await screen.findByRole("heading", { level: 2, name: "Overview" }),
     ).toBeTruthy();
     expect(window.location.hash).toBe("#/overview");
   });

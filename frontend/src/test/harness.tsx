@@ -135,7 +135,8 @@ export const fixtures = {
   events: {
     events: [
       {
-        ts: "2026-08-28T03:45:00Z",
+        // Relative to load time so range-scoped overview tests never age out.
+        ts: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
         account_lbl: "Alpha",
         kind: "added",
         friend_id: "f1",
