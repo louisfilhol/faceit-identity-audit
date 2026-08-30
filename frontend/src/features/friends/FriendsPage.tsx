@@ -18,6 +18,7 @@ import {
   useRunFriendsCheck,
   useSnapshots,
 } from "./queries";
+import { overlapFriendIds } from "@/features/overview/overlap";
 
 export function FriendsPage() {
   const queryClient = useQueryClient();
@@ -36,6 +37,10 @@ export function FriendsPage() {
   const snapshots = useMemo(
     () => snapshotsQuery.data?.snapshots ?? [],
     [snapshotsQuery.data],
+  );
+  const overlapIds = useMemo(
+    () => overlapFriendIds(snapshots, label),
+    [snapshots, label],
   );
 
   const refreshWatchList = () =>
@@ -81,7 +86,7 @@ export function FriendsPage() {
       </div>
 
       <OverlapCard />
-      <EventsCard events={events} />
+      <EventsCard events={events} overlapIds={overlapIds} />
       <WatchListCard snapshots={snapshots} label={label} />
     </section>
   );

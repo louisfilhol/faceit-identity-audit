@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { fixtures, installFetchRoutes, renderApp } from "@/test/harness";
 
@@ -101,5 +102,72 @@ describe("overview dashboard", () => {
     window.location.hash = "#/overview";
     renderApp();
     expect(await screen.findByText("View all")).toBeTruthy();
+  });
+
+  it("links the suspicious-overlaps KPI first with a warn tone", async () => {
+    window.location.hash = "#/overview";
+    renderApp();
+    const hero = await screen.findByRole("link", {
+      name: /Suspicious overlaps/i,
+    });
+    expect(hero.getAttribute("href")).toBe("#/friends");
+    expect(hero.className).toContain("is-link");
+    // The warn tone lands once snapshots resolve (an overlap exists).
+    await waitFor(() => {
+      expect(hero.className).toContain("warn");
+    });
+  });
+
+  it("flags events whose friend is on several accounts", async () => {
+    window.location.hash = "#/overview";
+    renderApp();
+    // f1 (mutual_friend) is on two accounts in the fixture.
+    expect(
+      await screen.findByRole("img", { name: "on multiple accounts" }),
+    ).toBeTruthy();
+  });
+
+  it("filters recent events by kind", async () => {
+    window.location.hash = "#/overview";
+    renderApp();
+    expect(await screen.findByText("added")).toBeTruthy();
+    await userEvent.click(
+      screen.getByRole("button", { name: "Removed", pressed: false }),
+    );
+    expect(
+      await screen.findByText("No removed events in recent history."),
+    ).toBeTruthy();
+    await userEvent.click(
+      screen.getByRole("button", { name: "Added", pressed: false }),
+    );
+    expect(await screen.findByText("added")).toBeTruthy();
+  });
+
+  it("opens the watch list filtered when an overlap row is clicked", async () => {
+    window.location.hash = "#/overview";
+    renderApp();
+    await screen.findByText("2 accounts");
+    await userEvent.click(
+      screen.getByRole("button", { name: /mutual_friend/ }),
+    );
+    const search = await screen.findByLabelText("Search watched friends");
+    expect(search).toHaveValue("mutual_friend");
+  });
+
+  it("shows a retry banner and failed KPI foots when queries error", async () => {
+    restore();
+    ({ restore } = installFetchRoutes({
+      ...fixtures.defaultRoutes(true),
+      "/api/friends/status": { status: 500, body: { detail: "boom" } },
+    }));
+    window.location.hash = "#/overview";
+    renderApp();
+    expect(await screen.findByRole("alert")).toBeTruthy();
+    expect(screen.getAllByText("failed to load").length).toBeGreaterThan(0);
+    // Retrying keeps the banner while the route still fails, without crashing.
+    await userEvent.click(screen.getByRole("button", { name: "Retry" }));
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toBeTruthy();
+    });
   });
 });

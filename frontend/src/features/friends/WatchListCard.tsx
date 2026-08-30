@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router";
 import { Search } from "lucide-react";
 import { Pill, Tag } from "@/components/common/Pill";
 import { fmtNum, fmtTs } from "@/lib/format";
@@ -14,7 +15,10 @@ export function WatchListCard({
   snapshots: FriendsSnapshot[];
   label: AccountLabeler;
 }) {
-  const [search, setSearch] = useState("");
+  // /friends?friend=<nickname> deep link (used by the overview overlap rows)
+  // seeds the search box.
+  const [searchParams] = useSearchParams();
+  const [search, setSearch] = useState(() => searchParams.get("friend") ?? "");
 
   const overlapIds = useMemo(
     () => overlapFriendIds(snapshots, label),

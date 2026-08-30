@@ -8,7 +8,14 @@ import { queryKeys } from "@/api/keys";
 import type { FriendsEvent } from "@/api/types";
 import { EVENTS_TABLE_HEAD, EventRows } from "./EventsTable";
 
-export function EventsCard({ events }: { events: FriendsEvent[] }) {
+export function EventsCard({
+  events,
+  overlapIds,
+}: {
+  events: FriendsEvent[];
+  /** Friends seen on 2+ accounts — rendered as an amber dot on their rows. */
+  overlapIds?: Set<string>;
+}) {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [kind, setKind] = useState("");
@@ -63,7 +70,7 @@ export function EventsCard({ events }: { events: FriendsEvent[] }) {
           {EVENTS_TABLE_HEAD}
           <tbody>
             {rows.length ? (
-              <EventRows events={rows} />
+              <EventRows events={rows} overlapIds={overlapIds} />
             ) : (
               <tr>
                 <td colSpan={4} className="empty">

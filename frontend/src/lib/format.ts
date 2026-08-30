@@ -15,6 +15,20 @@ export function fmtTs(iso: string | null | undefined): string {
   });
 }
 
+/** Humanized relative time for dense table cells ("just now", "5m ago",
+ * "2h ago", "3d ago"). Falls back to the absolute timestamp after two weeks. */
+export function fmtRel(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return String(iso);
+  const sec = Math.round((Date.now() - t) / 1000);
+  if (sec < 45) return "just now";
+  if (sec < 3600) return `${Math.max(1, Math.round(sec / 60))}m ago`;
+  if (sec < 86_400) return `${Math.round(sec / 3600)}h ago`;
+  if (sec < 14 * 86_400) return `${Math.round(sec / 86_400)}d ago`;
+  return fmtTs(iso);
+}
+
 /** Humanize a duration in seconds ("42s", "3.4 min", "2h 05m"). */
 export function fmtDur(sec: number | null | undefined): string {
   const s = Number(sec) || 0;
