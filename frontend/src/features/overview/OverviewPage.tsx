@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { useMemo } from "react";
 import { Link } from "react-router";
+import { ArrowRight, TriangleAlert } from "lucide-react";
 import { Spinner } from "@/components/common/Spinner";
 import { useHealth } from "@/hooks/useHealth";
 import { usePlayers } from "@/hooks/usePlayers";
@@ -168,7 +169,10 @@ export function OverviewPage() {
       <div className="grid-2">
         <div className="card">
           <div className="card-head">
-            <h3>⚠️ Suspicious overlaps</h3>
+            <h3 className="card-title warn">
+              <TriangleAlert size={16} strokeWidth={2.2} aria-hidden="true" />
+              Suspicious overlaps
+            </h3>
             <span className="pill">{overlaps.length}</span>
           </div>
           <p className="card-hint">
@@ -195,7 +199,8 @@ export function OverviewPage() {
           <div className="card-head">
             <h3>Recent events</h3>
             <Link className="link" to="/friends">
-              View all →
+              View all
+              <ArrowRight size={13} aria-hidden="true" />
             </Link>
           </div>
           <div className="table-wrap">

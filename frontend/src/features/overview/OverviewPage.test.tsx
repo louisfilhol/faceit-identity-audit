@@ -100,6 +100,6 @@ describe("overview dashboard", () => {
   it("offers a link to the full friends history", async () => {
     window.location.hash = "#/overview";
     renderApp();
-    expect(await screen.findByText("View all →")).toBeTruthy();
+    expect(await screen.findByText("View all")).toBeTruthy();
   });
 });

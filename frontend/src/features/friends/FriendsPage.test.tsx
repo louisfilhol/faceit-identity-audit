@@ -66,7 +66,7 @@ describe("friends configuration card", () => {
     );
     await user.click(screen.getByRole("button", { name: /Save config/ }));
 
-    expect(await screen.findByText("Saved ✓")).toBeTruthy();
+    expect(await screen.findByText("Saved")).toBeTruthy();
     const put = calls.find(
       (c) => c.method === "PUT" && c.url === "/api/friends/config",
     );
@@ -131,7 +131,7 @@ describe("friends configuration card", () => {
     await user.clear(interval as HTMLInputElement);
     await user.type(interval as HTMLInputElement, "30");
     await user.click(screen.getByRole("button", { name: /Save schedule/ }));
-    expect(await screen.findByText("Saved ✓")).toBeTruthy();
+    expect(await screen.findByText("Saved")).toBeTruthy();
     const put = calls.find(
       (c) => c.method === "PUT" && c.url === "/api/friends/scheduler",
     );

@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Download } from "lucide-react";
 import { Pill, Tag } from "@/components/common/Pill";
+import { ResultNote } from "@/components/common/ResultNote";
 import { Spinner } from "@/components/common/Spinner";
 import { useToast } from "@/components/common/Toast";
 import {
@@ -104,7 +106,7 @@ export function SyncCard() {
       });
     },
     onSuccess: (r) => {
-      setUserNote({ text: r.detail || "logged in ✓", cls: "result-note good" });
+      setUserNote({ text: r.detail || "logged in", cls: "result-note good" });
       toast("FACEIT session saved", "good");
     },
     onError: (e) => {
@@ -221,24 +223,10 @@ export function SyncCard() {
           }
         >
           {starting || syncRunning ? <Spinner /> : null}
-          <svg
-            viewBox="0 0 24 24"
-            width="16"
-            height="16"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
+          <Download size={16} strokeWidth={2.2} aria-hidden="true" />
           Sync recent matches
         </button>
-        {note ? <span className={note.cls}>{note.text}</span> : null}
+        {note ? <ResultNote note={note} /> : null}
       </div>
       <div className="table-wrap">
         <table>

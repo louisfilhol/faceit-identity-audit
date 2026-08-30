@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Eye } from "lucide-react";
 import { Spinner } from "@/components/common/Spinner";
 import { queryKeys } from "@/api/keys";
 import { ConfigCard } from "./ConfigCard";
@@ -54,20 +55,7 @@ export function FriendsPage() {
         </div>
         <div className="btn-group">
           <button type="button" className="btn" onClick={refreshWatchList}>
-            <svg
-              viewBox="0 0 24 24"
-              width="16"
-              height="16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
+            <Eye size={16} aria-hidden="true" />
             Watch list
           </button>
           <button

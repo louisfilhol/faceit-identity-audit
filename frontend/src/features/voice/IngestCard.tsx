@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Upload } from "lucide-react";
 import { Tag } from "@/components/common/Pill";
+import {
+  ResultNote,
+  type ResultNoteData,
+} from "@/components/common/ResultNote";
 import { useToast } from "@/components/common/Toast";
 import { queryKeys } from "@/api/keys";
 import { uploadDemo } from "@/api/voice";
@@ -74,11 +79,6 @@ function ProgressBar({ job }: { job: IngestJob | undefined }) {
   );
 }
 
-interface Note {
-  text: string;
-  cls: string;
-}
-
 export function IngestCard({ onIngested }: { onIngested: () => void }) {
   const toast = useToast();
   const queryClient = useQueryClient();
@@ -109,7 +109,7 @@ export function IngestCard({ onIngested }: { onIngested: () => void }) {
 
   // The status note is fully derived from the upload + job state, so there is
   // no state to keep in sync and no stale copy after a page reload.
-  let note: Note | null = null;
+  let note: ResultNoteData | null = null;
   if (uploading) {
     note = { text: "Uploading demo…", cls: "result-note busy" };
   } else if (uploadError) {
@@ -120,7 +120,7 @@ export function IngestCard({ onIngested }: { onIngested: () => void }) {
     const players = job.result.players ?? [];
     const embedded = players.filter((p) => p.status === "embedded").length;
     note = {
-      text: `Done ✓ demo #${job.result.demo_id} · ${embedded} embedded / ${players.length} processed`,
+      text: `Done — demo #${job.result.demo_id} · ${embedded} embedded / ${players.length} processed`,
       cls: "result-note good",
     };
   } else if (ingest.jobId) {
@@ -225,21 +225,7 @@ export function IngestCard({ onIngested }: { onIngested: () => void }) {
         }}
         onDrop={onDrop}
       >
-        <svg
-          viewBox="0 0 24 24"
-          width="26"
-          height="26"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-          <polyline points="17 8 12 3 7 8" />
-          <line x1="12" y1="3" x2="12" y2="15" />
-        </svg>
+        <Upload size={26} strokeWidth={1.8} aria-hidden="true" />
         <div className="drop-text">
           {file ? (
             <>
@@ -275,7 +261,7 @@ export function IngestCard({ onIngested }: { onIngested: () => void }) {
         >
           Ingest
         </button>
-        {note ? <span className={note.cls}>{note.text}</span> : null}
+        {note ? <ResultNote note={note} /> : null}
       </div>
       {job ? <ProgressBar job={job} /> : null}
     </div>

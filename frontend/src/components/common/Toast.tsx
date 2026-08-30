@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { X } from "lucide-react";
 
 export type ToastKind = "" | "good" | "bad" | "busy";
 
@@ -86,7 +87,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               aria-label="Dismiss notification"
               onClick={() => dismiss(t.id)}
             >
-              ✕
+              <X size={14} aria-hidden="true" />
             </button>
           </div>
         ))}

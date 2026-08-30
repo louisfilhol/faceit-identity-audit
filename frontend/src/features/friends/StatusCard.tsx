@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { useState } from "react";
 import { Pill } from "@/components/common/Pill";
+import { ResultNote } from "@/components/common/ResultNote";
 import { Spinner } from "@/components/common/Spinner";
 import { useToast } from "@/components/common/Toast";
 import { fmtNum, fmtTs } from "@/lib/format";
@@ -67,7 +68,7 @@ function SchedulerPanel({
   const note = save.isPending
     ? { text: "saving…", cls: "result-note busy" }
     : save.isSuccess && save.data
-      ? { text: "Saved ✓", cls: "result-note good" }
+      ? { text: "Saved", cls: "result-note good" }
       : save.isError
         ? { text: save.error.message, cls: "result-note bad" }
         : null;
@@ -127,7 +128,7 @@ function SchedulerPanel({
         >
           {save.isPending ? <Spinner /> : null} Save schedule
         </button>
-        {note ? <span className={note.cls}>{note.text}</span> : null}
+        {note ? <ResultNote note={note} /> : null}
       </div>
       <p className="card-hint">{schedulerDetail(scheduler)}</p>
     </div>

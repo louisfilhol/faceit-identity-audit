@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { useState } from "react";
+import { ArrowLeftRight, X } from "lucide-react";
 import { Spinner } from "@/components/common/Spinner";
+import { ResultNote } from "@/components/common/ResultNote";
 import { useToast } from "@/components/common/Toast";
 import type { FriendsConfig } from "@/api/types";
 import {
@@ -90,7 +92,7 @@ function AccountRow({
         onClick={() => void onResolve()}
         disabled={resolving}
       >
-        {resolving ? "…" : "⇄"}
+        {resolving ? "…" : <ArrowLeftRight size={13} aria-hidden="true" />}
       </button>
       <button
         type="button"
@@ -100,7 +102,7 @@ function AccountRow({
         aria-label="Remove account"
         onClick={onRemove}
       >
-        ✕
+        <X size={14} aria-hidden="true" />
       </button>
     </div>
   );
@@ -129,7 +131,7 @@ export function ConfigCard({ config }: { config: FriendsConfig | undefined }) {
   const note = save.isPending
     ? { text: "saving…", cls: "result-note busy" }
     : save.isSuccess && save.data
-      ? { text: "Saved ✓", cls: "result-note good" }
+      ? { text: "Saved", cls: "result-note good" }
       : save.isError
         ? { text: save.error.message, cls: "result-note bad" }
         : null;
@@ -211,8 +213,8 @@ export function ConfigCard({ config }: { config: FriendsConfig | undefined }) {
           ))}
         </div>
         <p className="lbl-note" style={{ marginTop: 6 }}>
-          Paste a nickname (exact case), a profile URL, or a GUID — the ⇄ button
-          resolves it. Saving resolves anything left unresolved.
+          Paste a nickname (exact case), a profile URL, or a GUID — the swap
+          button resolves it. Saving resolves anything left unresolved.
         </p>
       </div>
       <div className="field-actions">
@@ -224,7 +226,7 @@ export function ConfigCard({ config }: { config: FriendsConfig | undefined }) {
         >
           {save.isPending ? <Spinner /> : null} Save config
         </button>
-        {note ? <span className={note.cls}>{note.text}</span> : null}
+        {note ? <ResultNote note={note} /> : null}
       </div>
     </div>
   );

@@ -443,6 +443,9 @@ code {
 }
 
 .link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 12.5px;
   font-weight: 600;
 }
@@ -484,6 +487,15 @@ code {
   text-transform: uppercase;
   letter-spacing: 0.7px;
   color: var(--text-2);
+}
+.card-head h3.card-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.card-head h3.card-title.warn svg {
+  flex-shrink: 0;
+  color: var(--amber);
 }
 .card-hint {
   margin: 0 0 12px;
@@ -731,6 +743,9 @@ input[type="number"] {
   flex-wrap: wrap;
 }
 .result-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 12.5px;
   color: var(--muted);
 }
@@ -1256,6 +1271,9 @@ td.sub {
 }
 .toast-close:hover {
   color: var(--text);
+}
+.toast-close svg {
+  display: block;
 }
 @keyframes toast-in {
   from {

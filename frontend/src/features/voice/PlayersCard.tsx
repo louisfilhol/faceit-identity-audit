@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Search } from "lucide-react";
 import { Pill, Tag } from "@/components/common/Pill";
 import { fmtDur, fmtNum } from "@/lib/format";
 import { queryKeys } from "@/api/keys";
@@ -31,19 +32,7 @@ export function PlayersCard({ voiceAvailable }: { voiceAvailable: boolean }) {
         <h3>Known players</h3>
         <div className="table-tools">
           <div className="search-box">
-            <svg
-              viewBox="0 0 24 24"
-              width="15"
-              height="15"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              aria-hidden="true"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
+            <Search size={15} aria-hidden="true" />
             <input
               type="search"
               placeholder="Search nickname…"

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { Gem, LayoutDashboard, Mic, Users } from "lucide-react";
 import { NavLink } from "react-router";
 import type { HealthSummary } from "@/hooks/useHealth";
 
@@ -6,67 +7,17 @@ const NAV_ITEMS = [
   {
     to: "/overview",
     label: "Overview",
-    icon: (
-      <svg
-        viewBox="0 0 24 24"
-        width="18"
-        height="18"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <rect x="3" y="3" width="7" height="9" rx="1.5" />
-        <rect x="14" y="3" width="7" height="5" rx="1.5" />
-        <rect x="14" y="12" width="7" height="9" rx="1.5" />
-        <rect x="3" y="16" width="7" height="5" rx="1.5" />
-      </svg>
-    ),
+    icon: <LayoutDashboard size={18} aria-hidden="true" />,
   },
   {
     to: "/friends",
     label: "Friends Monitor",
-    icon: (
-      <svg
-        viewBox="0 0 24 24"
-        width="18"
-        height="18"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-      </svg>
-    ),
+    icon: <Users size={18} aria-hidden="true" />,
   },
   {
     to: "/voice",
     label: "Voice Identity",
-    icon: (
-      <svg
-        viewBox="0 0 24 24"
-        width="18"
-        height="18"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
-        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-        <line x1="12" y1="19" x2="12" y2="22" />
-      </svg>
-    ),
+    icon: <Mic size={18} aria-hidden="true" />,
   },
 ];
 
@@ -83,19 +34,7 @@ export function Sidebar({
     <aside className={`sidebar${open ? " open" : ""}`} id="sidebar">
       <div className="brand">
         <div className="brand-mark" aria-hidden="true">
-          <svg
-            viewBox="0 0 24 24"
-            width="20"
-            height="20"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M6 3h12l4 6-10 13L2 9z" />
-            <path d="M2 9h20M12 22 8 9l4-6 4 6-4 13" />
-          </svg>
+          <Gem size={20} strokeWidth={2.2} />
         </div>
         <div className="brand-text">
           <strong>FACEIT</strong>
