@@ -12,17 +12,20 @@ CSGOVE_VERSION="${CSGOVE_VERSION:-v3.1.6}"
 CSGOVE_SHA256="${CSGOVE_SHA256:-cc66839c54154d8f0cd361b2510603c22dc18e9ab037a634e6e1bdc15c606a6e}"
 INSTALL_DEV=0
 INSTALL_BROWSER=1
+INSTALL_FRONTEND=1
 
 usage() {
-  echo "Usage: ./setup.sh [--dev] [--skip-browser]"
-  echo "  --dev           install pytest, ruff, and pre-commit"
-  echo "  --skip-browser  skip the optional Playwright Chromium download"
+  echo "Usage: ./setup.sh [--dev] [--skip-browser] [--skip-frontend]"
+  echo "  --dev            install pytest, ruff, and pre-commit"
+  echo "  --skip-browser   skip the optional Playwright Chromium download"
+  echo "  --skip-frontend  skip the npm install/build of the React dashboard"
 }
 
 while (($#)); do
   case "$1" in
     --dev) INSTALL_DEV=1 ;;
     --skip-browser) INSTALL_BROWSER=0 ;;
+    --skip-frontend) INSTALL_FRONTEND=0 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "ERROR: unknown option: $1" >&2; usage >&2; exit 2 ;;
   esac
@@ -108,6 +111,17 @@ if [ "${PREDOWNLOAD_MODEL:-0}" = "1" ]; then
   echo "==> Pre-downloading the SpeechBrain speaker model"
   "$VENV_DIR/bin/python" -c \
     'from speechbrain.inference.speaker import SpeakerRecognition; SpeakerRecognition.from_hparams(source="speechbrain/spkrec-ecapa-voxceleb")'
+fi
+
+if [ "$INSTALL_FRONTEND" -eq 1 ]; then
+  echo "==> Building the React dashboard (frontend/)"
+  if command -v npm >/dev/null 2>&1; then
+    (cd "$PROJECT_DIR/frontend" && npm ci --no-audit --no-fund && npm run build)
+  else
+    echo "WARNING: npm not found — skipping the frontend build." >&2
+    echo "         Install Node.js 20+, then run:" >&2
+    echo "           cd frontend && npm ci && npm run build" >&2
+  fi
 fi
 
 echo
